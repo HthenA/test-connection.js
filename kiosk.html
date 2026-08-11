@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay Studio Firing Kiosk</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f2f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 26px;
+            border-bottom: 3px solid #d35400; /* Terracotta Clay */
+            padding-bottom: 10px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 15px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #d35400;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #b33900;
+        }
+
+        .btn-secondary {
+            background-color: #bdc3c7;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+        }
+
+        .summary-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        /* Firing Ticket Print View */
+        .slip-preview {
+            border: 2px dashed #7f8c8d;
+            padding: 25px;
+            background: #fff;
+            text-align: left;
+            font-family: monospace;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .slip-header-date {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .barcode-mock {
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0 10px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Clay Studio Kiosk</h1>
+
+    <!-- STEP 1: Class Question -->
+    <div id="step-1" class="step active">
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Are you currently enrolled in a class?</h3>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="selectClassOption(true)">Yes, I'm in a Class</button>
+            <button class="btn-secondary" onclick="selectClassOption(false)">No (Member / Assistant)</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: Name Selection -->
+    <div id="step-2" class="step">
+        <h3 id="role-title" style="color: #2c3e50; margin-bottom: 15px;">Select Your Details</h3>
+        
+        <div id="class-fields" style="display: none;">
+            <label for="class-select">Select Class:</label>
+            <select id="class-select" onchange="loadStudents()">
+                <option value="">-- Choose Class --</option>
+                <option value="Teapot Class">Teapot Class (500 CI Allowance)</option>
+                <option value="Mug Class">Mug Class (300 CI Allowance)</option>
+            </select>
+        </div>
+
+        <label for="student-select">Select Your Name:</label>
+        <select id="student-select" onchange="onStudentSelect()">
+            <option value="">-- Choose Name --</option>
+            <!-- Injected dynamically from SQLite database -->
+        </select>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(1)">Back</button>
+            <button class="btn-primary" id="btn-next-dimensions" onclick="nextStep(3)">Next</button>
+        </div>
+    </div>
+
+    <!-- STEP 3: Piece Dimensions -->
+    <div id="step-3" class="step">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Enter Piece Details</h3>
+        
+        <label for="clay-select">Clay Body:</label>
+        <select id="clay-select">
+            <option value="White Stoneware">White Stoneware</option>
+            <option value="Brown Speckled">Brown Speckled</option>
+            <option value="Red Stoneware">Red Stoneware</option>
+        </select>
+
+        <label>Dimensions (Inches):</label>
+        <div class="grid-3">
+            <input type="number" id="height" step="0.25" placeholder="H" oninput="calculatePrice()">
+            <input type="number" id="width" step="0.25" placeholder="W" oninput="calculatePrice()">
+            <input type="number" id="depth" step="0.25" placeholder="D" oninput="calculatePrice()">
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-row">
+                <span>Calculated Volume:</span>
+                <strong><span id="vol-display">0.00</span> Cu. In.</strong>
+            </div>
+            <div class="summary-row" style="font-size: 18px; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
+                <strong>Estimated Firing Cost:</strong>
+                <strong style="color: #d35400;">$<span id="cost-display">0.00</span></strong>
+            </div>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px; font-style: italic;" id="logic-note"></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(2)">Back</button>
+            <button class="btn-primary" onclick="showSlip()">Review & Print</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: Review & Print Ticket -->
+    <div id="step-4" class="step" style="text-align: center;">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Confirm Firing Slip</h3>
+        <p style="color: #7f8c8d; font-size: 14px;">Confirm details are correct. Tap "Print & Save" to print your receipt and record the piece.</p>
+        
+        <div id="slip-preview" class="slip-preview">
+            <!-- Simulated printed slip -->
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(3)">Back</button>
+            <button class="btn-primary" onclick="confirmPrint()">Print & Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isClassMode = false;
+    let selectedUserRole = 'member';
+    
+    // This master list will now be populated dynamically from your SQLite database
+    let serverStudents = [];
+
+    // Load roster automatically when page opens
+    window.onload = function() {
+        fetchRosterFromServer();
+    };
+
+    async function fetchRosterFromServer() {
+        try {
+            // Ask your local web server for the active student list
+            const response = await fetch('http://localhost:3000/api/students');
+            serverStudents = await response.json();
+            console.log("Successfully loaded roster from database:", serverStudents);
+        } catch (error) {
+            console.error("Failed to connect to server. Falling back to offline defaults.", error);
+            // Offline fallback list in case server is down
+            serverStudents = [
+                { name: "Alice Smith (Offline)", role: "member" },
+                { name: "Bob Jones (Offline)", role: "assistant" },
+                { name: "Charlie Brown (Offline)", role: "class" }
+            ];
+        }
+    }
+
+    function selectClassOption(isClass) {
+        isClassMode = isClass;
+        const classFields = document.getElementById('class-fields');
+        const roleTitle = document.getElementById('role-title');
+        
+        if (isClass) {
+            classFields.style.display = 'block';
+            roleTitle.innerText = "Class Student Details";
+        } else {
+            classFields.style.display = 'none';
+            roleTitle.innerText = "Member Details";
+        }
+        
+        loadStudentDropdown();
+        nextStep(2);
+    }
+
+    function loadStudents() {
+        // Triggered when a student chooses their class dropdown
+        loadStudentDropdown();
+    }
+
+    function loadStudentDropdown() {
+        const select = document.getElementById('student-select');
+        select.innerHTML = '<option value="">-- Choose Name --</option>';
+
+        // Filter students based on whether they are in Class or Membership Mode
+        serverStudents.forEach(student => {
+            if (isClassMode && student.role === 'class') {
+                const opt = document.createElement('option');
+                opt.value = student.name;
+                opt.innerText = student.name;
+                opt.setAttribute('data-role', 'class');
+                select.appendChild(opt);
+            } else if (!isClassMode && student.role !== 'class') {
+                const opt = document.createElement('option');
+                opt.value = student.name;
+                opt.innerText = student.name;
+                opt.setAttribute('data-role', student.role);
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    function onStudentSelect() {
+        const select = document.getElementById('student-select');
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption) {
+            selectedUserRole = selectedOption.getAttribute('data-role') || 'member';
+        }
+        calculatePrice();
+    }
+
+    function calculatePrice() {
+        const h = parseFloat(document.getElementById('height').value) || 0;
+        const w = parseFloat(document.getElementById('width').value) || 0;
+        const d = parseFloat(document.getElementById('depth').value) || 0;
+        
+        const volume = h * w * d;
+        document.getElementById('vol-display').innerText = volume.toFixed(2);
+
+        let cost = 0;
+        let note = "";
+
+        if (isClassMode) {
+            cost = 0;
+            note = "Covered under your class's firing allowance.";
+        } else {
+            const baseRate = 0.06;
+            let rawCost = volume * baseRate;
+            
+            if (rawCost > 0 && rawCost < 1.00) {
+                cost = 1.00;
+                note = "$1.00 minimum charge applied for small volumes.";
+            } else {
+                cost = rawCost;
+            }
+
+            if (selectedUserRole === 'assistant') {
+                cost = cost * 0.85; // 15% Assistant discount
+                note = "15% Studio Assistant discount applied.";
+            }
+        }
+
+        document.getElementById('cost-display').innerText = cost.toFixed(2);
+        document.getElementById('logic-note').innerText = note;
+        return { volume, cost };
+    }
+
+    function showSlip() {
+        const h = document.getElementById('height').value;
+        const w = document.getElementById('width').value;
+        const d = document.getElementById('depth').value;
+        
+        if(!h || !w || !d) {
+            alert("Please input the piece's Height, Width, and Depth first.");
+            return;
+        }
+
+        const studentName = document.getElementById('student-select').value;
+        if (!studentName) {
+            alert("Please select your name first.");
+            return;
+        }
+
+        const clay = document.getElementById('clay-select').value;
+        const calculations = calculatePrice();
+        
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const now = new Date();
+        const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
+
+        const slipHTML = `
+            <div class="slip-header-date">${formattedDateHeader}</div>
+            <div style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px;">*** FIRING SLIP ***</div>
+            <p><strong>NAME:</strong> ${studentName}</p>
+            <p><strong>CLAY BODY:</strong> ${clay}</p>
+            <p><strong>DIMENSIONS:</strong> ${h}" x ${w}" x ${d}"</p>
+            <p><strong>VOLUME:</strong> ${calculations.volume.toFixed(2)} Cu. In.</p>
+            <p><strong>EST. CHARGE:</strong> $${calculations.cost.toFixed(2)}</p>
+            <div class="barcode-mock">||||| | ||||| | ||</div>
+            <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold;">PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF</p>
+        `;
+        document.getElementById('slip-preview').innerHTML = slipHTML;
+        nextStep(4);
+    }
+
+    async function confirmPrint() {
+        const studentName = document.getElementById('student-select').value;
+        const clay = document.getElementById('clay-select').value;
+        const calculations = calculatePrice();
+
+        // 1. Open browser print dialog to print physical slip
+        window.print();
+
+        // 2. Send the data wirelessly to our running background server
+        await sendToDatabaseBackend(studentName, calculations.cost, calculations.volume, clay);
+
+        alert("Piece successfully recorded on your monthly statement! Slip printed.");
+        resetForm();
+    }
+
+    async function sendToDatabaseBackend(student, amount, volume, clayBody) {
+        const backendUrl = "http://localhost:3000/api/log-piece";
+        
+        const payload = {
+            studentName: student,
+            amountDue: amount,
+            cubicInches: volume,
+            clayType: clayBody
+        };
+
+        try {
+            const response = await fetch(backendUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                console.log("Successfully logged to local database:", data.message);
+            } else {
+                console.error("Failed to log:", data.error);
+            }
+        } catch (error) {
+            console.error("Error communicating with server:", error);
+        }
+    }
+
+    function nextStep(stepNum) {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById(`step-${stepNum}`).classList.add('active');
+    }
+
+    function prevStep(stepNum) {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById(`step-${stepNum}`).classList.add('active');
+    }
+
+    function resetForm() {
+        document.getElementById('height').value = '';
+        document.getElementById('width').value = '';
+        document.getElementById('depth').value = '';
+        document.getElementById('vol-display').innerText = '0.00';
+        document.getElementById('cost-display').innerText = '0.00';
+        document.getElementById('logic-note').innerText = '';
+        nextStep(1);
+    }
+</script>
+</body>
+</html>
