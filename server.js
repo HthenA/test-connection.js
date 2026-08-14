@@ -20,6 +20,32 @@ async function startServer() {
     });
     console.log("Connected to local SQLite database.");
 
+    // ─── SELF-HEALING DATABASE SETUP ─────────────────────────────────
+    // Every time the server starts, it will automatically verify/create
+    // the required tables if they do not exist!
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        role TEXT NOT NULL DEFAULT 'member',
+        status TEXT NOT NULL DEFAULT 'Active'
+      )
+    `);
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS pieces (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_name TEXT NOT NULL,
+        clay_body TEXT NOT NULL,
+        volume_ci REAL NOT NULL,
+        calculated_fee REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Shelf Queue',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("Database tables verified/created successfully.");
+    // ─────────────────────────────────────────────────────────────────
+
     // ENDPOINT 1: Send active students/members to the kiosk dropdown
     app.get('/api/students', async (req, res) => {
       try {
@@ -54,7 +80,6 @@ async function startServer() {
 
     // ENDPOINT 3: Listen for Squarespace class/membership purchases
     app.post('/api/squarespace-webhook', async (req, res) => {
-      // Handle Squarespace's initial handshake/test pings
       if (req.body.topic === 'test' || !req.body.data) {
         console.log("[SQUARESPACE WEBHOOK] Connection test handshake successful!");
         return res.json({ success: true });
@@ -65,9 +90,8 @@ async function startServer() {
       const lastName = orderData.billingAddress?.lastName || "";
       const fullName = `${firstName} ${lastName}`.trim();
       
-      // Determine their role based on what product they purchased
       const lineItems = orderData.lineItems || [];
-      let calculatedRole = 'member'; // Default to standard member
+      let calculatedRole = 'member';
 
       for (const item of lineItems) {
         const productName = item.productName || "";
@@ -81,7 +105,6 @@ async function startServer() {
       }
 
       try {
-        // Automatically insert the student or update their role if they already exist
         await db.run(
           `INSERT INTO users (name, role, status) 
            VALUES (?, ?, 'Active') 
