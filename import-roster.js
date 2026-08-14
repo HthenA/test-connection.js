@@ -9,22 +9,33 @@ async function importRoster() {
       driver: sqlite3.Database
     });
 
-    // ─── ADD YOUR REAL NAMES HERE ──────────────────────────────────
-    // Just replace these placeholder names with your real studio rosters:
-    
+    // 1. CLEAN UP: Delete the previous mock/placeholder names so they don't clutter your kiosk
+    console.log("Cleaning up old mock/placeholder names...");
+    const mockNames = [
+      'Alice Smith', 'Bob Jones', 'Charlie Brown',
+      'Jane Assistant', 'John Assistant', 
+      'Regular Member One', 'Regular Member Two', 'Regular Member Three'
+    ];
+    for (const name of mockNames) {
+      await db.run(`DELETE FROM users WHERE name = ?`, [name]);
+    }
+
+    // 2. ADD YOUR ACTUAL REAL NAMES HERE ───────────────────────────
+    // Replace these examples with the actual first and last names of your assistants:
     const assistants = [
-      "Jane Assistant",
-      "John Assistant"
+      "Heather Assistant",
+      "Sarah Assistant"
     ];
 
+    // Replace these examples with the actual first and last names of your members:
     const members = [
-      "Regular Member One",
-      "Regular Member Two",
-      "Regular Member Three"
+      "Dave Member",
+      "Emily Member",
+      "John Member"
     ];
     // ───────────────────────────────────────────────────────────────
 
-    console.log("Importing rosters...");
+    console.log("Importing your actual studio rosters...");
 
     for (const name of assistants) {
       await db.run(
@@ -40,7 +51,7 @@ async function importRoster() {
       );
     }
 
-    console.log("✅ SUCCESS! Real rosters successfully imported into your local database file.");
+    console.log("✅ SUCCESS! Real studio rosters successfully imported into your local database.");
 
   } catch (error) {
     console.error("❌ ERROR: Failed to import rosters.");
