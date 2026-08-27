@@ -282,11 +282,11 @@
     let selectedUserRole = 'member';
     
     // ─── CONFIGURATION SECTION ──────────────────────────────────────
-    // 1. Paste your secure, read-only Google Sheets "Roster" CSV link here:
-    const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
+    // 1. Your Google Sheets CSV link (PRE-CONFIGURED - DO NOT CHANGE!):
+    const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/1rGgRLhMolWH1OnLj9ZyFykI1B0xoA5fasdy3O2dTUT0/gviz/tq?tqx=out:csv&gid=1644768064";
 
     // 2. Paste your Make.com "Log Firing" Webhook URL here:
-    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
+    const makeWebhookUrl = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
     // ────────────────────────────────────────────────────────────────
 
     let serverStudents = [];
@@ -297,7 +297,6 @@
 
     async function fetchRosterFromGoogleSheets() {
         try {
-            // Natively fetches your 5-column Roster from Google Sheets as a CSV completely free!
             const response = await fetch(googleSheetCsvUrl);
             const csvText = await response.text();
             
@@ -318,8 +317,8 @@
                         
                         // Smart translation for your active studio roster roles:
                         if (role === 'student') mappedRole = 'class';
-                        if (role === 'sa' || role === 'studio assistant') mappedRole = 'assistant'; // 15% discount
-                        if (role === 'osp' || role === 'open studio pass') mappedRole = 'member';   // 10% clay discount
+                        if (role === 'sa' || role === 'studio assistant') mappedRole = 'assistant'; 
+                        if (role === 'osp' || role === 'open studio pass') mappedRole = 'member';   
                         
                         serverStudents.push({ name: fullName, role: mappedRole });
                     }
