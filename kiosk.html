@@ -1,3 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay Studio Firing Kiosk</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f2f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 26px;
+            border-bottom: 3px solid #d35400; /* Terracotta Clay */
+            padding-bottom: 10px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 15px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #d35400;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #b33900;
+        }
+
+        .btn-secondary {
+            background-color: #bdc3c7;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+        }
+
+        .summary-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        /* Firing Ticket Print View */
+        .slip-preview {
+            border: 2px dashed #7f8c8d;
+            padding: 25px;
+            background: #fff;
+            text-align: left;
+            font-family: monospace;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .slip-header-date {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .barcode-mock {
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0 10px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Clay Studio Kiosk</h1>
+
+    <!-- STEP 0: Welcome / Mode Selection -->
+    <div id="step-0" class="step active">
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Welcome! What are we doing today?</h3>
+        <div class="btn-group" style="flex-direction: column; gap: 20px;">
+            <button class="btn-primary" style="padding: 20px;" onclick="selectKioskMode('firing')">Log Firing Piece</button>
+            <button class="btn-secondary" style="background-color: #16a085; color: white; padding: 20px;" onclick="selectKioskMode('clay')">Purchase Clay Bag</button>
+        </div>
+    </div>
+
+    <!-- STEP 1: Roster Status Check -->
+    <div id="step-1" class="step">
+        <h3 id="status-title" style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Are you currently enrolled in a class?</h3>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="selectClassOption(true)">Yes, I'm in a Class</button>
+            <button class="btn-secondary" onclick="selectClassOption(false)">No (Member / Assistant)</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: Name Selection -->
+    <div id="step-2" class="step">
+        <h3 id="role-title" style="color: #2c3e50; margin-bottom: 15px;">Select Your Details</h3>
+        
+        <div id="class-fields" style="display: none;">
+            <label for="class-select">Select Class:</label>
+            <select id="class-select" onchange="loadStudents()">
+                <option value="">-- Choose Class --</option>
+                <option value="Teapot Class">Teapot Class</option>
+                <option value="Mug Class">Mug Class</option>
+            </select>
+        </div>
+
+        <label for="student-select">Select Your Name:</label>
+        <select id="student-select" onchange="onStudentSelect()">
+            <option value="">-- Choose Name --</option>
+            <!-- Injected dynamically from Google Sheets -->
+        </select>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(1)">Back</button>
+            <button class="btn-primary" onclick="goToStep3()">Next</button>
+        </div>
+    </div>
+
+    <!-- STEP 3a: Firing Entry -->
+    <div id="step-3-firing" class="step">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Enter Firing Details</h3>
+        
+        <label for="clay-select">Clay Body:</label>
+        <select id="clay-select">
+            <option value="White Stoneware">White Stoneware</option>
+            <option value="Brown Speckled">Brown Speckled</option>
+            <option value="Red Stoneware">Red Stoneware</option>
+        </select>
+
+        <label>Dimensions (Inches):</label>
+        <div class="grid-3">
+            <input type="number" id="height" step="0.25" placeholder="H" oninput="calculateFiringPrice()">
+            <input type="number" id="width" step="0.25" placeholder="W" oninput="calculateFiringPrice()">
+            <input type="number" id="depth" step="0.25" placeholder="D" oninput="calculateFiringPrice()">
+        </div>
+
+        <label for="description">Description of Piece (optional):</label>
+        <input type="text" id="description" placeholder="e.g., blue mug, large vase">
+
+        <div class="summary-card">
+            <div class="summary-row">
+                <span>Calculated Volume:</span>
+                <strong><span id="vol-display">0.00</span> Cu. In.</strong>
+            </div>
+            <div class="summary-row" style="font-size: 18px; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
+                <strong>Estimated Firing Cost:</strong>
+                <strong style="color: #d35400;">$<span id="cost-display">0.00</span></strong>
+            </div>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px; font-style: italic;" id="logic-note-firing"></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(2)">Back</button>
+            <button class="btn-primary" onclick="showSlip('firing')">Review Details</button>
+        </div>
+    </div>
+
+    <!-- STEP 3b: Clay Purchase Entry -->
+    <div id="step-3-clay" class="step">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Select Clay Bag</h3>
+        
+        <label for="clay-bag-select">Choose Clay Bag (25lb):</label>
+        <select id="clay-bag-select" onchange="calculateClayPrice()">
+            <option value="White Stoneware Bag" data-price="20.00">White Stoneware Bag — $20.00</option>
+            <option value="Brown Speckled Bag" data-price="22.00">Brown Speckled Bag — $22.00</option>
+            <option value="Red Stoneware Bag" data-price="20.00">Red Stoneware Bag — $20.00</option>
+        </select>
+
+        <div class="summary-card">
+            <div class="summary-row" style="font-size: 18px;">
+                <strong>Estimated Clay Cost:</strong>
+                <strong style="color: #16a085;">$<span id="clay-cost-display">0.00</span></strong>
+            </div>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px; font-style: italic;" id="logic-note-clay"></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(2)">Back</button>
+            <button class="btn-primary" onclick="showSlip('clay')">Review Details</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: Review & Print Ticket -->
+    <div id="step-4" class="step" style="text-align: center;">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Confirm Firing Slip</h3>
+        <p style="color: #7f8c8d; font-size: 14px;">Confirm details are correct. Tap "Print & Save" to print your receipt and record the transaction.</p>
+        
+        <div id="slip-preview" class="slip-preview">
+            <!-- Simulated printed slip -->
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-secondary" id="btn-back-from-print" onclick="prevStep(3)">Back</button>
+            <button class="btn-primary" onclick="confirmPrint()">Print & Save</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let kioskMode = 'firing'; 
     let isClassMode = false;
@@ -5,9 +283,9 @@
     
     // ─── CONFIGURATION SECTION ──────────────────────────────────────
     // 1. Paste your secure, read-only Google Sheets "Roster" CSV link here:
-    const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRgAAEFjn7u53xehyieeKCxXD-nLxtUBHcO4swhGJL1_04MlJEI3GOMPjoCjlGuIX02IvVdsGmKLmt7/pubhtml?gid=973520264&single=true&output=csv";
+    const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRgAAEFjn7u53xehyieeKCxXD-nLxtUBHcO4swhGJL1_04MlJEI3GOMPjoCjlGuIX02IvVdsGmKLmt7/pub?gid=1644768064&single=true&output=csv";
 
-    // 2. Paste your Make.com "Log Firing" Webhook URL here:
+    // 2. Paste your new Make.com "Log Firing" Webhook URL here:
     const makeWebhookUrl = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
     // ────────────────────────────────────────────────────────────────
 
@@ -257,12 +535,15 @@
         let amount = 0;
         let volume = 0;
         let detailName = "";
+        let description = "—"; // Defaults to blank for clay sales
 
         if (kioskMode === 'firing') {
             const calculations = calculateFiringPrice();
             amount = calculations.cost;
             volume = calculations.volume;
             detailName = document.getElementById('clay-select').value;
+            // Grab the description typed by the student
+            description = document.getElementById('description').value || "—";
         } else {
             const calculations = calculateClayPrice();
             amount = calculations.cost;
@@ -273,20 +554,21 @@
         // 1. Trigger printer dialog
         window.print();
 
-        // 2. Log wirelessly to Make.com Webhook
-        await sendToDatabaseBackend(studentName, amount, volume, detailName);
+        // 2. Log wirelessly to Make.com Webhook with the description
+        await sendToDatabaseBackend(studentName, amount, volume, detailName, description);
 
         alert("Transaction successfully recorded on your monthly statement! Slip printed.");
         resetForm();
     }
 
-    async function sendToDatabaseBackend(student, amount, volume, detailName) {
+    async function sendToDatabaseBackend(student, amount, volume, detailName, descriptionText) {
         const payload = {
             studentName: student,
             amountDue: amount,
             cubicInches: volume,
             clayType: detailName,
-            status: "Unbilled" // Default status to process at end of month
+            description: descriptionText, // Sends description to Make!
+            status: "Unbilled"
         };
 
         try {
@@ -324,3 +606,5 @@
         nextStep(0); 
     }
 </script>
+</body>
+</html>
