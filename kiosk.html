@@ -167,22 +167,13 @@
         <h3 id="status-title" style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Are you currently enrolled in a class?</h3>
         <div class="btn-group">
             <button class="btn-primary" onclick="selectClassOption(true)">Yes, I'm in a Class</button>
-            <button class="btn-secondary" onclick="selectClassOption(false)">No (Member / Assistant)</button>
+            <button class="btn-secondary" onclick="selectClassOption(false)">No (Open Studio Pass / Assistant)</button>
         </div>
     </div>
 
     <!-- STEP 2: Name Selection -->
     <div id="step-2" class="step">
         <h3 id="role-title" style="color: #2c3e50; margin-bottom: 15px;">Select Your Details</h3>
-        
-        <div id="class-fields" style="display: none;">
-            <label for="class-select">Select Class:</label>
-            <select id="class-select" onchange="loadStudents()">
-                <option value="">-- Choose Class --</option>
-                <option value="Teapot Class">Teapot Class</option>
-                <option value="Mug Class">Mug Class</option>
-            </select>
-        </div>
 
         <label for="student-select">Select Your Name:</label>
         <select id="student-select" onchange="onStudentSelect()">
@@ -203,8 +194,8 @@
         <label for="clay-select">Clay Body:</label>
         <select id="clay-select">
             <option value="White Stoneware">White Stoneware</option>
+            <option value="Brooklyn Red">Brooklyn Red</option>
             <option value="Brown Speckled">Brown Speckled</option>
-            <option value="Red Stoneware">Red Stoneware</option>
         </select>
 
         <label>Dimensions (Inches):</label>
@@ -237,13 +228,19 @@
 
     <!-- STEP 3b: Clay Purchase Entry -->
     <div id="step-3-clay" class="step">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">Select Clay Bag</h3>
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Clay Bag Purchase</h3>
         
-        <label for="clay-bag-select">Choose Clay Bag (25lb):</label>
-        <select id="clay-bag-select" onchange="calculateClayPrice()">
-            <option value="White Stoneware Bag" data-price="20.00">White Stoneware Bag — $20.00</option>
-            <option value="Brown Speckled Bag" data-price="22.00">Brown Speckled Bag — $22.00</option>
-            <option value="Red Stoneware Bag" data-price="20.00">Red Stoneware Bag — $20.00</option>
+        <label for="clay-type-select">Select Clay Type:</label>
+        <select id="clay-type-select" onchange="calculateClayPrice()">
+            <option value="New" data-price="16.00">New Bag — $16.00</option>
+            <option value="Reclaim" data-price="5.00">Reclaim Bag — $5.00</option>
+        </select>
+
+        <label for="clay-body-select">Select Clay Body:</label>
+        <select id="clay-body-select">
+            <option value="White Stoneware">White Stoneware</option>
+            <option value="Brooklyn Red">Brooklyn Red</option>
+            <option value="Brown Speckled">Brown Speckled</option>
         </select>
 
         <div class="summary-card">
@@ -283,10 +280,9 @@
     
     // ─── CONFIGURATION SECTION ──────────────────────────────────────
     // 1. Your Google Sheets CSV link (PRE-CONFIGURED - DO NOT CHANGE!):
-   // 1. Your Google Sheets CSV link (PRE-CONFIGURED - DO NOT CHANGE!):
     const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
 
-    // 2. Paste your Make.com "Log Firing" Webhook URL here:
+    // 2. Paste your Google Apps Script Web App URL here:
     const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
     // ────────────────────────────────────────────────────────────────
 
@@ -298,6 +294,7 @@
 
     async function fetchRosterFromGoogleSheets() {
         try {
+            // Natively fetches your 5-column Roster from Google Sheets as a CSV completely free!
             const response = await fetch(googleSheetCsvUrl);
             const csvText = await response.text();
             
@@ -343,15 +340,12 @@
 
     function selectClassOption(isClass) {
         isClassMode = isClass;
-        const classFields = document.getElementById('class-fields');
         const roleTitle = document.getElementById('role-title');
         
         if (isClass) {
-            classFields.style.display = 'block';
             roleTitle.innerText = "Class Student Details";
         } else {
-            classFields.style.display = 'none';
-            roleTitle.innerText = "Member Details";
+            roleTitle.innerText = "Open Studio Pass Holder / Assistant Details";
         }
         
         loadStudentDropdown();
@@ -429,7 +423,7 @@
         } else if (selectedUserRole === 'class') {
             note = "Class Student: Full firing rate applies ($0.06/CI).";
         } else {
-            note = "Member: Full firing rate applies ($0.06/CI).";
+            note = "Open Studio Pass Holder: Full firing rate applies ($0.06/CI).";
         }
 
         document.getElementById('cost-display').innerText = cost.toFixed(2);
@@ -438,21 +432,11 @@
     }
 
     function calculateClayPrice() {
-        const select = document.getElementById('clay-bag-select');
-        const basePrice = parseFloat(select.options[select.selectedIndex].getAttribute('data-price')) || 20.00;
+        const select = document.getElementById('clay-type-select');
+        const basePrice = parseFloat(select.options[select.selectedIndex].getAttribute('data-price')) || 16.00;
         
         let cost = basePrice;
-        let note = "";
-
-        if (selectedUserRole === 'assistant') {
-            cost = basePrice * 0.85; 
-            note = "Studio Assistant: 15% discount applied to clay.";
-        } else if (selectedUserRole === 'member') {
-            cost = basePrice * 0.90; 
-            note = "Open Studio Pass (OSP): 10% discount applied to clay.";
-        } else {
-            note = "Class Student: Full clay price applies.";
-        }
+        let note = "Standard clay price applies (No discounts).";
 
         document.getElementById('clay-cost-display').innerText = cost.toFixed(2);
         document.getElementById('logic-note-clay').innerText = note;
@@ -509,8 +493,9 @@
             `;
             document.getElementById('btn-back-from-print').setAttribute('onclick', "prevStep('3-firing')");
         } else {
-            const select = document.getElementById('clay-bag-select');
-            const clayBagName = select.value;
+            const typeSelect = document.getElementById('clay-type-select');
+            const bodySelect = document.getElementById('clay-body-select');
+            const clayBagName = `${typeSelect.value} (${bodySelect.value})`;
             const calculations = calculateClayPrice();
 
             slipHTML = `
@@ -548,13 +533,15 @@
             const calculations = calculateClayPrice();
             amount = calculations.cost;
             volume = 0; 
-            detailName = "Clay Bag: " + document.getElementById('clay-bag-select').value;
+            const typeSelect = document.getElementById('clay-type-select');
+            const bodySelect = document.getElementById('clay-body-select');
+            detailName = `Clay Bag: ${typeSelect.value} (${bodySelect.value})`;
         }
 
         // 1. Trigger printer dialog
         window.print();
 
-        // 2. Log wirelessly to Make.com Webhook with the description
+        // 2. Log wirelessly to Google Apps Script
         await sendToDatabaseBackend(studentName, amount, volume, detailName, description);
 
         alert("Transaction successfully recorded on your monthly statement! Slip printed.");
@@ -567,7 +554,7 @@
             amountDue: amount,
             cubicInches: volume,
             clayType: detailName,
-            description: descriptionText, // Sends description to Make!
+            description: descriptionText, 
             status: "Unbilled"
         };
 
@@ -577,9 +564,9 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-            console.log("Successfully logged transaction to Make.com.");
+            console.log("Successfully logged transaction to Google Sheets.");
         } catch (error) {
-            console.error("Error communicating with Make.com:", error);
+            console.error("Error communicating with Google Sheets:", error);
         }
     }
 
