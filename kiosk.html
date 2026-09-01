@@ -278,9 +278,7 @@
     <!-- STEP 5: Post-Save Consecutive Firing Option -->
     <div id="step-5" class="step" style="text-align: center;">
         <h3 style="color: #2c3e50; margin-bottom: 25px;">Receipt Printed Successfully! 🎉</h3>
-        <p style="color: #7f8c8d; margin-bottom: 30px;">Your transaction has been recorded. Log another piece?
-
-        </p>
+        <p style="color: #7f8c8d; margin-bottom: 30px;">Your transaction has been recorded. Do you have another piece to log under your name, or are you finished?</p>
         <div class="btn-group" style="flex-direction: column; gap: 15px;">
             <button class="btn-primary" style="padding: 18px;" onclick="logAnotherPiece()">Yes, Log Another Piece</button>
             <button class="btn-secondary" style="padding: 18px;" onclick="finishedFlow()">No, I'm Finished</button>
@@ -293,11 +291,11 @@
     let isClassMode = false;
     let selectedUserRole = 'member';
     
-    // ─── CONFIGURATION SECTION ──────────────────────────────────────
-    // 1. Your Google Sheets CSV link (PRE-CONFIGURED - DO NOT CHANGE!):
+    // ─── CONFIGURATION SECTION (PRE-CONFIGURED!) ────────────────────
+    // 1. Your Google Sheets CSV link:
     const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
 
-    // 2. Paste your Google Apps Script Web App URL here:
+    // 2. Your Google Apps Script Web App URL:
     const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
     // ────────────────────────────────────────────────────────────────
 
@@ -365,6 +363,11 @@
         
         loadStudentDropdown();
         nextStep(2);
+    }
+
+    // Fully resets the form and returns to Welcome screen
+    function finishedFlow() {
+        resetForm();
     }
 
     function loadStudents() {
@@ -521,124 +524,3 @@
                 <p><strong>PRODUCT:</strong> ${clayBagName}</p>
                 <p><strong>CHARGE ADDED:</strong> $${calculations.cost.toFixed(2)}</p>
                 <p><strong>DATE:</strong> ${now.toLocaleDateString()}</p>
-                <div class="barcode-mock">||| || | ||| || |</div>
-                <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold; color: #16a085;">HAND TICKET TO ASSISTANT TO RETRIEVE BAG</p>
-            `;
-            document.getElementById('btn-back-from-print').setAttribute('onclick', "prevStep('3-clay')");
-        }
-
-        document.getElementById('slip-preview').innerHTML = slipHTML;
-        nextStep(4);
-    }
-
-    async function confirmPrint() {
-        const studentName = document.getElementById('student-select').value;
-        let amount = 0;
-        let volume = 0;
-        let detailName = "";
-        let description = "—"; // Defaults to blank for clay sales
-
-        if (kioskMode === 'firing') {
-            const calculations = calculateFiringPrice();
-            amount = calculations.cost;
-            volume = calculations.volume;
-            detailName = document.getElementById('clay-select').value;
-            // Grab the description typed by the student
-            description = document.getElementById('description').value || "—";
-        } else {
-            const calculations = calculateClayPrice();
-            amount = calculations.cost;
-            volume = 0; 
-            const typeSelect = document.getElementById('clay-type-select');
-            const bodySelect = document.getElementById('clay-body-select');
-            detailName = `Clay Bag: ${typeSelect.value} (${bodySelect.value})`;
-        }
-
-        // 1. Trigger printer dialog
-        window.print();
-
-        // 2. Log wirelessly to Google Apps Script Web App
-        await sendToDatabaseBackend(studentName, amount, volume, detailName, description);
-
-        // Consecutive Firing Option:
-        if (kioskMode === 'firing') {
-            // Keep student selected, move to Step 5 to ask if they have another piece
-            nextStep('5');
-        } else {
-            alert("Clay purchase successfully recorded on your monthly statement! Slip printed.");
-            resetForm(); // Completely resets to welcome screen (Step 0)
-        }
-    }
-
-    async function sendToDatabaseBackend(student, amount, volume, detailName, descriptionText) {
-        const payload = {
-            studentName: student,
-            amountDue: amount,
-            cubicInches: volume,
-            clayType: detailName,
-            description: descriptionText, 
-            status: "Unbilled"
-        };
-
-        try {
-            await fetch(makeWebhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            console.log("Successfully logged transaction to Google Sheets.");
-        } catch (error) {
-            console.error("Error communicating with Google Sheets:", error);
-        }
-    }
-
-    // Resets dimensions/descriptions and takes them straight back to Step 3a Firing
-    function logAnotherPiece() {
-        document.getElementById('height').value = '';
-        document.getElementById('width').value = '';
-        document.getElementById('depth').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('vol-display').innerText = '0.00';
-        document.getElementById('cost-display').innerText = '0.00';
-        document.getElementById('logic-note-firing').innerText = '';
-        
-        nextStep('3-firing');
-    }
-
-    // Fully resets the form and returns to Welcome screen
-    function finishedFlow() {
-        resetForm();
-    }
-
-    function nextStep(stepNum) {
-        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
-        document.getElementById(`step-${stepNum}`).classList.add('active');
-    }
-
-    function prevStep(stepNum) {
-        if (stepNum === 1) {
-            nextStep(0);
-        } else if (stepNum === '3-firing' || stepNum === '3-clay') {
-            nextStep(2);
-        } else {
-            nextStep(stepNum);
-        }
-    }
-
-    function resetForm() {
-        document.getElementById('height').value = '';
-        document.getElementById('width').value = '';
-        document.getElementById('depth').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('vol-display').innerText = '0.00';
-        document.getElementById('cost-display').innerText = '0.00';
-        document.getElementById('logic-note-firing').innerText = '';
-        
-        // Clear name dropdown
-        document.getElementById('student-select').value = '';
-        
-        nextStep(0); 
-    }
-</script>
-</body>
-</html>
