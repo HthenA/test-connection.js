@@ -199,22 +199,41 @@
             <option value="White Stoneware">White Stoneware</option>
             <option value="Brooklyn Red">Brooklyn Red</option>
             <option value="Brown Speckled">Brown Speckled</option>
+            <option value="Other">Other</option>
         </select>
 
         <label>Dimensions (Inches):</label>
         <div class="grid-3">
-            <input type="number" id="height" step="0.25" placeholder="H" oninput="calculateFiringPrice()">
-            <input type="number" id="width" step="0.25" placeholder="W" oninput="calculateFiringPrice()">
-            <input type="number" id="depth" step="0.25" placeholder="D" oninput="calculateFiringPrice()">
+            <input type="number" id="height" inputmode="decimal" min="1" step="0.25" placeholder="H" oninput="calculateFiringPrice()">
+            <input type="number" id="width" inputmode="decimal" min="1" step="0.25" placeholder="W" oninput="calculateFiringPrice()">
+            <input type="number" id="depth" inputmode="decimal" min="1" step="0.25" placeholder="D" oninput="calculateFiringPrice()">
         </div>
+
+        <label for="firing-quantity">Quantity of Pieces:</label>
+        <select id="firing-quantity" onchange="calculateFiringPrice()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
 
         <label for="description">Description of Piece (optional):</label>
         <input type="text" id="description" placeholder="e.g., blue mug, large vase">
 
         <div class="summary-card">
             <div class="summary-row">
-                <span>Calculated Volume:</span>
+                <span>Calculated Volume (per piece):</span>
                 <strong><span id="vol-display">0.00</span> Cu. In.</strong>
+            </div>
+            <div class="summary-row">
+                <span>Subtotal (before discounts):</span>
+                <strong>$<span id="subtotal-display">0.00</span></strong>
             </div>
             <div class="summary-row" style="font-size: 18px; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
                 <strong>Estimated Firing Cost:</strong>
@@ -246,6 +265,15 @@
             <option value="Brown Speckled">Brown Speckled</option>
         </select>
 
+        <label for="clay-quantity">Quantity of Bags:</label>
+        <select id="clay-quantity" onchange="calculateClayPrice()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+
         <div class="summary-card">
             <div class="summary-row" style="font-size: 18px;">
                 <strong>Estimated Clay Cost:</strong>
@@ -267,6 +295,22 @@
         
         <div id="slip-preview" class="slip-preview">
             <!-- Simulated printed slip -->
+        </div>
+
+        <!-- Option to print a second duplicate receipt -->
+        <div class="form-group" style="background-color: #f1f2f6; padding: 15px; border-radius: 6px; margin: 20px 0; text-align: left;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 0;">
+                <input type="checkbox" id="chk-duplicate-receipt" style="width: auto; margin-top: 0;">
+                <span style="font-size: 14px; font-weight: normal; color: #34495e;">Print a duplicate copy of the receipt for my records? 🖨️</span>
+            </label>
+        </div>
+
+        <!-- Option to round up as a non-profit donation -->
+        <div class="form-group" style="background-color: #e3f2fd; padding: 15px; border-radius: 6px; margin: 20px 0; text-align: left; border: 1px solid #90caf9;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 0;">
+                <input type="checkbox" id="chk-roundup-donation" style="width: auto; margin-top: 0;">
+                <span style="font-size: 14px; font-weight: bold; color: #1e88e5;">Round up to the nearest dollar as a tax-deductible donation? ❤️</span>
+            </label>
         </div>
 
         <div class="btn-group">
@@ -296,7 +340,7 @@
     const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
 
     // 2. Your Google Apps Script Web App URL:
-    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbw2Obx5kymYGfIJlaX4L5C-jjiCcePnQ3pKAaoKdnBIteAEQXcVz4GZnIhBX5LNEHE1/exec";
+    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
     // ────────────────────────────────────────────────────────────────
 
     let serverStudents = [];
@@ -307,7 +351,6 @@
 
     async function fetchRosterFromGoogleSheets() {
         try {
-            // Natively fetches your 5-column Roster from Google Sheets as a CSV completely free!
             const response = await fetch(googleSheetCsvUrl);
             const csvText = await response.text();
             
@@ -325,8 +368,6 @@
                     
                     if (fullName && status === 'active') {
                         let mappedRole = role;
-                        
-                        // Smart translation for your active studio roster roles:
                         if (role === 'student') mappedRole = 'class';
                         if (role === 'sa' || role === 'studio assistant') mappedRole = 'assistant'; 
                         if (role === 'osp' || role === 'open studio pass') mappedRole = 'member';   
@@ -351,23 +392,20 @@
         nextStep(1);
     }
 
-    // Fully resets the form and returns to Welcome screen
-    function finishedFlow() {
-        resetForm();
-    }
-
     function selectClassOption(isClass) {
         isClassMode = isClass;
         const roleTitle = document.getElementById('role-title');
-        
         if (isClass) {
             roleTitle.innerText = "Class Student Details";
         } else {
             roleTitle.innerText = "Open Studio Pass Holder / Assistant Details";
         }
-        
         loadStudentDropdown();
         nextStep(2);
+    }
+
+    function finishedFlow() {
+        resetForm();
     }
 
     function loadStudents() {
@@ -406,15 +444,6 @@
         calculatePrices();
     }
 
-    function onStudentSelect() {
-        const select = document.getElementById('student-select');
-        const selectedOption = select.options[select.selectedIndex];
-        if (selectedOption) {
-            selectedUserRole = selectedOption.getAttribute('data-role') || 'member';
-        }
-        calculatePrices();
-    }
-
     function calculatePrices() {
         if (kioskMode === 'firing') {
             calculateFiringPrice();
@@ -424,50 +453,53 @@
     }
 
     function calculateFiringPrice() {
-        const h = parseFloat(document.getElementById('height').value) || 0;
-        const w = parseFloat(document.getElementById('width').value) || 0;
-        const d = parseFloat(document.getElementById('depth').value) || 0;
+        let h = parseFloat(document.getElementById('height').value) || 0;
+        let w = parseFloat(document.getElementById('width').value) || 0;
+        let d = parseFloat(document.getElementById('depth').value) || 0;
+        const qty = parseInt(document.getElementById('firing-quantity').value) || 1;
+
+        if (h > 0 && h < 1) h = 1;
+        if (w > 0 && w < 1) w = 1;
+        if (d > 0 && d < 1) d = 1;
         
         const volume = h * w * d;
         document.getElementById('vol-display').innerText = volume.toFixed(2);
 
-        let cost = 0;
+        const baseRate = 0.06;
+        let rawCostPerPiece = volume * baseRate;
+        let costPerPiece = (rawCostPerPiece > 0 && rawCostPerPiece < 1.00) ? 1.00 : rawCostPerPiece;
+
+        const subtotal = costPerPiece * qty;
+        document.getElementById('subtotal-display').innerText = subtotal.toFixed(2);
+
+        let total = subtotal;
         let note = "";
 
-        const baseRate = 0.06;
-        let rawCost = volume * baseRate;
-        
-        if (rawCost > 0 && rawCost < 1.00) {
-            cost = 1.00;
-            note = "$1.00 minimum charge applied for small volumes.";
-        } else {
-            cost = rawCost;
-        }
-
         if (selectedUserRole === 'assistant') {
-            cost = cost * 0.85; 
-            note = "Studio Assistant: 15% discount applied to firing.";
+            total = subtotal * 0.85; 
+            note = `Studio Assistant: 15% discount applied (Saving: $${(subtotal * 0.15).toFixed(2)})`;
         } else if (selectedUserRole === 'class') {
-            note = "Class Student: Full firing rate applies ($0.06/CI).";
+            note = `Class Student: Full firing rate applies ($0.06/CI, $1.00 min per piece).`;
         } else {
-            note = "Open Studio Pass Holder: Full firing rate applies ($0.06/CI).";
+            note = `Open Studio Pass Holder: Full firing rate applies ($0.06/CI, $1.00 min per piece).`;
         }
 
-        document.getElementById('cost-display').innerText = cost.toFixed(2);
+        document.getElementById('cost-display').innerText = total.toFixed(2);
         document.getElementById('logic-note-firing').innerText = note;
-        return { volume, cost };
+        return { volume, subtotal, cost: total, qty };
     }
 
     function calculateClayPrice() {
         const select = document.getElementById('clay-type-select');
+        const qty = parseInt(document.getElementById('clay-quantity').value) || 1;
         const basePrice = parseFloat(select.options[select.selectedIndex].getAttribute('data-price')) || 16.00;
         
-        let cost = basePrice;
-        let note = "Standard clay price applies (No discounts).";
+        const cost = basePrice * qty;
+        const note = "Standard clay price applies (No discounts).";
 
         document.getElementById('clay-cost-display').innerText = cost.toFixed(2);
         document.getElementById('logic-note-clay').innerText = note;
-        return { cost };
+        return { cost, qty };
     }
 
     // Navigates directly to the correct Step 3 layout based on mode
@@ -515,7 +547,7 @@
                 <p><strong>CLAY BODY:</strong> ${clay}</p>
                 <p><strong>DIMENSIONS:</strong> ${h}" x ${w}" x ${d}"</p>
                 <p><strong>VOLUME:</strong> ${calculations.volume.toFixed(2)} Cu. In.</p>
-                <p><strong>EST. CHARGE:</strong> $${calculations.cost.toFixed(2)}</p>
+                <p><strong>EST. CHARGE:</strong> $${(calculations.cost / calculations.qty).toFixed(2)} ${calculations.qty > 1 ? '(per piece)' : ''}</p>
                 <div class="barcode-mock">||||| | ||||| | ||</div>
                 <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold;">PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF</p>
             `;
@@ -531,7 +563,7 @@
                 <div style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px;">*** CLAY VOUCHER ***</div>
                 <p><strong>NAME:</strong> ${studentName}</p>
                 <p><strong>PRODUCT:</strong> ${clayBagName}</p>
-                <p><strong>CHARGE ADDED:</strong> $${calculations.cost.toFixed(2)}</p>
+                <p><strong>CHARGE:</strong> $${(calculations.cost / calculations.qty).toFixed(2)} ${calculations.qty > 1 ? '(per bag)' : ''}</p>
                 <p><strong>DATE:</strong> ${now.toLocaleDateString()}</p>
                 <div class="barcode-mock">||| || | ||| || |</div>
                 <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold; color: #16a085;">HAND TICKET TO ASSISTANT TO RETRIEVE BAG</p>
@@ -546,46 +578,75 @@
     async function confirmPrint() {
         const studentName = document.getElementById('student-select').value;
         let amount = 0;
+        let subtotal = 0;
         let volume = 0;
         let detailName = "";
-        let description = "—"; // Defaults to blank for clay sales
+        let description = "—"; 
+        let qty = 1;
 
         if (kioskMode === 'firing') {
             const calculations = calculateFiringPrice();
-            amount = calculations.cost;
+            amount = calculations.cost / calculations.qty; 
+            subtotal = calculations.subtotal / calculations.qty; 
             volume = calculations.volume;
             detailName = document.getElementById('clay-select').value;
-            // Grab the description typed by the student
             description = document.getElementById('description').value || "—";
+            qty = calculations.qty;
         } else {
             const calculations = calculateClayPrice();
-            amount = calculations.cost;
+            amount = calculations.cost / calculations.qty;
+            subtotal = amount;
             volume = 0; 
             const typeSelect = document.getElementById('clay-type-select');
             const bodySelect = document.getElementById('clay-body-select');
             detailName = `Clay Bag: ${typeSelect.value} (${bodySelect.value})`;
+            qty = calculations.qty;
+            description = `Clay Bag Purchase`;
         }
 
-        // 1. Trigger printer dialog
-        window.print();
+        // Calculations for donation round-up
+        const roundupChecked = document.getElementById('chk-roundup-donation').checked;
+        let singleDonationAmt = 0;
+        
+        if (roundupChecked && amount > 0) {
+            const totalForStatement = amount;
+            const roundedTotal = Math.ceil(totalForStatement);
+            singleDonationAmt = roundedTotal - totalForStatement;
+        }
 
-        // 2. Log wirelessly to Google Apps Script Web App
-        await sendToDatabaseBackend(studentName, amount, volume, detailName, description);
+        // Loop and print/save individual slips consecutively!
+        const printDuplicates = document.getElementById('chk-duplicate-receipt').checked;
+        const totalPrintCycles = printDuplicates ? 2 : 1;
 
-        // Consecutive Firing Option:
+        for (let q = 1; q <= qty; q++) {
+            let finalDescription = qty > 1 ? `${description} (${q} of ${qty})` : description;
+
+            // Trigger printer dialog (runs 2x per piece if duplicate checked)
+            for (let p = 1; p <= totalPrintCycles; p++) {
+                window.print();
+            }
+
+            // Log wirelessly to Google Apps Script Web App (creates a separate row per piece!)
+            const discountAmtPerPiece = subtotal - amount;
+            await sendToDatabaseBackend(studentName, selectedUserRole, subtotal, discountAmtPerPiece, amount, singleDonationAmt, volume, detailName, finalDescription);
+        }
+
         if (kioskMode === 'firing') {
-            // Keep student selected, move to Step 5 to ask if they have another piece
             nextStep('5');
         } else {
             alert("Clay purchase successfully recorded on your monthly statement! Slip printed.");
-            resetForm(); // Completely resets to welcome screen (Step 0)
+            resetForm(); 
         }
     }
 
-    async function sendToDatabaseBackend(student, amount, volume, detailName, descriptionText) {
+    async function sendToDatabaseBackend(student, role, subtotal, discount, amount, donation, volume, detailName, descriptionText) {
         const payload = {
             studentName: student,
-            amountDue: amount,
+            role: role,
+            subtotal: subtotal,
+            discount: discount, // Logs the exact dollar discount applied (e.g., $1.12)
+            amountDue: amount,   // Logs the final fee actually charged (e.g., $6.38)
+            donation: donation,   // Logs the rounded-up donation (e.g., $0.62)
             cubicInches: volume,
             clayType: detailName,
             description: descriptionText, 
@@ -595,7 +656,7 @@
         try {
             await fetch(makeWebhookUrl, {
                 method: "POST",
-                headers: { "Content-Type": "text/plain" }, // Native text/plain bypasses CORS preflight completely!
+                headers: { "Content-Type": "text/plain" }, 
                 body: JSON.stringify(payload)
             });
             console.log("Successfully logged transaction to Google Sheets.");
@@ -611,8 +672,10 @@
         document.getElementById('depth').value = '';
         document.getElementById('description').value = '';
         document.getElementById('vol-display').innerText = '0.00';
+        document.getElementById('subtotal-display').innerText = '0.00';
         document.getElementById('cost-display').innerText = '0.00';
         document.getElementById('logic-note-firing').innerText = '';
+        document.getElementById('firing-quantity').value = '1';
         
         nextStep('3-firing');
     }
@@ -637,10 +700,17 @@
         document.getElementById('width').value = '';
         document.getElementById('depth').value = '';
         document.getElementById('vol-display').innerText = '0.00';
+        document.getElementById('subtotal-display').innerText = '0.00';
         document.getElementById('cost-display').innerText = '0.00';
         document.getElementById('logic-note-firing').innerText = '';
         document.getElementById('description').value = '';
+        document.getElementById('firing-quantity').value = '1';
+        document.getElementById('clay-quantity').value = '1';
         
+        // Uncheck checkboxes
+        document.getElementById('chk-duplicate-receipt').checked = false;
+        document.getElementById('chk-roundup-donation').checked = false;
+
         // Clear name dropdown
         document.getElementById('student-select').value = '';
         
