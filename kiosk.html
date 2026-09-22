@@ -779,8 +779,9 @@
             `;
 
             // Append the page(s) based on duplicate count
-            for (let c = 0; c < copiesPerPiece; c++) {
-                slipPreview.innerHTML += pageHTML;
+            for (let c = 0; c < totalPrintCycles; c++) {
+    slipPreview.innerHTML += pageHTML;
+}
             }
         }
 
