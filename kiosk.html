@@ -357,7 +357,7 @@
         </select>
 
         <div class="summary-card">
-            <div class="summary-row" style="font-size: 18px;">
+            <div class="summary-row">
                 <strong>Estimated Clay Cost:</strong>
                 <strong style="color: #16a085;">$<span id="clay-cost-display">0.00</span></strong>
             </div>
@@ -420,7 +420,7 @@
     
     // ─── CONFIGURATION SECTION ──────────────────────────────────────
     const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
-    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbyWQ581EJacp3NP2JO2RpNl3PnBv_kZTvz0_OVyTW8X7TmEFlfK0VzwPOwQA_Xraqkl/exec";
+    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
     // ────────────────────────────────────────────────────────────────
 
     let serverStudents = [];
@@ -519,7 +519,7 @@
         if (input.id === 'description') return; // Do not validate text description box
         let val = parseFloat(input.value);
         if (val > 0 && val < 1) {
-            input.value = 1.00;
+            input.value = "1.00";
             calculateFiringPrice(); // Instantly recalculates the on-screen numbers
         }
     }
@@ -575,9 +575,9 @@
         const qty = parseInt(document.getElementById('firing-quantity').value) || 1;
 
         // Force-snap values on-screen before doing the final calculations
-        if (h > 0 && h < 1) { h = 1.00; document.getElementById('height').value = 1.00; }
-        if (w > 0 && w < 1) { w = 1.00; document.getElementById('width').value = 1.00; }
-        if (d > 0 && d < 1) { d = 1.00; document.getElementById('depth').value = 1.00; }
+        if (h > 0 && h < 1) { h = 1.00; document.getElementById('height').value = "1.00"; }
+        if (w > 0 && w < 1) { w = 1.00; document.getElementById('width').value = "1.00"; }
+        if (d > 0 && d < 1) { d = 1.00; document.getElementById('depth').value = "1.00"; }
         
         const volume = h * w * d;
         document.getElementById('vol-display').innerText = volume.toFixed(2);
@@ -617,16 +617,6 @@
         document.getElementById('clay-cost-display').innerText = cost.toFixed(2);
         document.getElementById('logic-note-clay').innerText = note;
         return { cost, qty };
-    }
-
-    // Force-snap any typed dimension less than 1 up to exactly 1.00 on-screen
-    function validateMinDimension(input) {
-        if (input.id === 'description') return; // Do not validate text description box
-        let val = parseFloat(input.value);
-        if (val > 0 && val < 1) {
-            input.value = 1.00;
-            calculateFiringPrice(); // Instantly recalculates the on-screen numbers
-        }
     }
 
     function goToStep3() {
@@ -742,32 +732,63 @@
         if (roundupChecked && amount > 0) {
             const totalForStatement = amount;
             const roundedTotal = Math.ceil(totalForStatement);
-            // The donation is the difference (e.g. $6.00 - $5.28 = $0.72)
             singleDonationAmt = roundedTotal - totalForStatement;
         }
 
-        // Loop and print/save individual slips consecutively!
+        // 1. Build the consolidated multi-page print layout inside #slip-preview!
+        const slipPreview = document.getElementById('slip-preview');
+        slipPreview.innerHTML = ''; // Clear previous single-preview
+
         const printDuplicates = document.getElementById('chk-duplicate-receipt').checked;
         const totalPrintCycles = printDuplicates ? 2 : 1;
 
+        const now = new Date();
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
+
         for (let q = 1; q <= qty; q++) {
             let finalDescription = qty > 1 ? `${description} (${q} of ${qty})` : description;
-
-            // Update the printed slip preview dynamically so the PAPER receipt shows "Piece X of Y"!
-            if (kioskMode === 'firing') {
-                const chargeLine = document.getElementById('slip-preview').querySelector('.est-charge-line');
-                if (chargeLine) {
-                    chargeLine.innerHTML = `<strong>EST. CHARGE:</strong> $${(amount + singleDonationAmt).toFixed(2)} ${qty > 1 ? `(Piece ${q} of ${qty})` : ''}`;
-                }
+            
+            // Adjust charge text to display "Piece X of Y" on the printed sheet
+            let finalChargeOnSlip = amount;
+            if (singleDonationAmt > 0) {
+                finalChargeOnSlip = amount + singleDonationAmt;
+            }
+            let chargeText = `$${finalChargeOnSlip.toFixed(2)} ${qty > 1 ? `(Piece ${q} of ${qty})` : ''}`;
+            if (kioskMode === 'clay') {
+                chargeText = `$${finalChargeOnSlip.toFixed(2)} ${qty > 1 ? `(Bag ${q} of ${qty})` : ''}`;
             }
 
-            // Trigger printer dialog (runs 2x per piece if duplicate checked)
-            for (let p = 1; p <= totalPrintCycles; p++) {
-                window.print();
-            }
+            const pageHTML = `
+                <div class="print-page">
+                    <div class="slip-header-date">${formattedDateHeader}</div>
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px;">
+                        *** ${kioskMode === 'firing' ? 'FIRING SLIP' : 'CLAY VOUCHER'} ***
+                    </div>
+                    <p><strong>NAME:</strong> ${studentName}</p>
+                    <p><strong>${kioskMode === 'firing' ? 'CLAY BODY:' : 'PRODUCT:'}</strong> ${detailName}</p>
+                    ${kioskMode === 'firing' ? `<p><strong>DIMENSIONS:</strong> ${height.value}" x ${width.value}" x ${depth.value}"</p>` : ''}
+                    ${kioskMode === 'firing' ? `<p><strong>VOLUME:</strong> ${volume.toFixed(2)} Cu. In.</p>` : ''}
+                    <p><strong>EST. CHARGE:</strong> ${chargeText}</p>
+                    <div class="barcode-mock">||||| | ||||| | ||</div>
+                    <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold;">
+                        ${kioskMode === 'firing' ? 'PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF' : 'HAND TICKET TO ASSISTANT TO RETRIEVE BAG'}
+                    </p>
+                </div>
+            `;
 
-            // Log wirelessly to Google Apps Script Web App (creates a separate row per piece!)
-            // We now send the subtotal, the calculated discount, the total fee, and the round-up donation!
+            // Append the page(s) based on duplicate count
+            for (let c = 0; c < copiesPerPiece; c++) {
+                slipPreview.innerHTML += pageHTML;
+            }
+        }
+
+        // 2. Trigger the printer dialog (This runs EXACTLY ONCE, opening a single dialog containing all pages!)
+        window.print();
+
+        // 3. Log wirelessly to Google Apps Script Web App (creates a separate row per piece!)
+        for (let q = 1; q <= qty; q++) {
+            let finalDescription = qty > 1 ? `${description} (${q} of ${qty})` : description;
             const discountAmtPerPiece = subtotal - amount;
             await sendToDatabaseBackend(studentName, selectedUserRole, subtotal, discountAmtPerPiece, amount, singleDonationAmt, volume, detailName, finalDescription);
         }
@@ -826,4 +847,37 @@
         document.getElementById(`step-${stepNum}`).classList.add('active');
     }
 
-    // ... (rest of the file remains exactly the same)
+    function prevStep(stepNum) {
+        if (stepNum === 1) {
+            nextStep(0);
+        } else if (stepNum === '3-firing' || stepNum === '3-clay') {
+            nextStep(2);
+        } else {
+            nextStep(stepNum);
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('height').value = '';
+        document.getElementById('width').value = '';
+        document.getElementById('depth').value = '';
+        document.getElementById('vol-display').innerText = '0.00';
+        document.getElementById('subtotal-display').innerText = '0.00';
+        document.getElementById('cost-display').innerText = '0.00';
+        document.getElementById('logic-note-firing').innerText = '';
+        document.getElementById('description').value = '';
+        document.getElementById('firing-quantity').value = '1';
+        document.getElementById('clay-quantity').value = '1';
+        
+        // Uncheck checkboxes
+        document.getElementById('chk-duplicate-receipt').checked = false;
+        document.getElementById('chk-roundup-donation').checked = false;
+
+        // Clear name dropdown
+        document.getElementById('student-select').value = '';
+        
+        nextStep(0); 
+    }
+</script>
+</body>
+</html>
