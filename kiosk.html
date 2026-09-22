@@ -266,9 +266,10 @@
         <p style="font-size: 13px; color: #e74c3c; font-weight: bold; margin-top: 5px; margin-bottom: 15px; text-align: center;">⚠️ Minimum Firing Dimension is 1 inch. Any entry less than 1" will be adjusted to 1.00".</p>
 
         <div class="grid-3">
-            <input type="number" id="height" inputmode="decimal" min="1" step="0.25" placeholder="H" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('height')">
-            <input type="number" id="width" inputmode="decimal" min="1" step="0.25" placeholder="W" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('width')">
-            <input type="number" id="depth" inputmode="decimal" min="1" step="0.25" placeholder="D" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('depth')">
+            <!-- input type changed to 'text' to allow decimal points on keypads smoothly -->
+            <input type="text" id="height" inputmode="decimal" min="1" step="0.25" placeholder="H" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('height')">
+            <input type="text" id="width" inputmode="decimal" min="1" step="0.25" placeholder="W" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('width')">
+            <input type="text" id="depth" inputmode="decimal" min="1" step="0.25" placeholder="D" oninput="calculateFiringPrice()" onchange="validateMinDimension(this)" onfocus="setActiveInput('depth')">
         </div>
 
         <!-- On-Screen Numerical Keypad HTML -->
@@ -357,7 +358,7 @@
         </select>
 
         <div class="summary-card">
-            <div class="summary-row">
+            <div class="summary-row" style="font-size: 18px;">
                 <strong>Estimated Clay Cost:</strong>
                 <strong style="color: #16a085;">$<span id="clay-cost-display">0.00</span></strong>
             </div>
@@ -420,7 +421,7 @@
     
     // ─── CONFIGURATION SECTION ──────────────────────────────────────
     const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSbCa9zrn7kpfyGyxkx9pNlAaOhq_h2TKmbqhqT11lzFnZDONUWsvjvI6VqaNQgPZVieAN8iaLWDGLp/pub?gid=1644768064&single=true&output=csv";
-    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbyWQ581EJacp3NP2JO2RpNl3PnBv_kZTvz0_OVyTW8X7TmEFlfK0VzwPOwQA_Xraqkl/exec";
+    const makeWebhookUrl = "https://script.google.com/macros/s/AKfycbxMPg35FjOfzFUcToZHAvddmGKlYN-fToYQURPTN7eVez9jOI4l0Dg--t1xx8wUUkFl/exec";
     // ────────────────────────────────────────────────────────────────
 
     let serverStudents = [];
@@ -508,7 +509,7 @@
             input.value += key;
         }
 
-        // Trigger price calculation & auto-snap limits immediately as they type
+        // Trigger price calculation immediately as they type
         if (kioskMode === 'firing') {
             calculateFiringPrice();
         }
