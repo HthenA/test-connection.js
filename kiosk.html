@@ -781,10 +781,8 @@
             // Append the page(s) based on duplicate count
             for (let c = 0; c < totalPrintCycles; c++) {
     slipPreview.innerHTML += pageHTML;
-}
-            }
-        }
-
+}}
+        
         // 2. Trigger the printer dialog (This runs EXACTLY ONCE, opening a single dialog containing all pages!)
         window.print();
 
