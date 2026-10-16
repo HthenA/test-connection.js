@@ -180,29 +180,67 @@ background-color: #b33900;
 }
 
 /* ─── MULTI-PAGE PRINTING CSS ──────────────────────────────────── */
+/* ─── COMPACT RECEIPT PRINTING (2" / 58mm paper) ─────────────── */
 @media print {
-body {
-background-color: white;
-}
-.container {
-box-shadow: none;
-padding: 0;
-margin: 0;
-max-width: 100%;
-}
-body > :not(.container), .container > :not(#step-4), #step-4 > :not(#slip-preview) {
-display: none !important;
-}
-.print-page {
-border: none !important; 
-page-break-after: always;
-break-after: page;
-box-sizing: border-box;
-padding: 15px 0;
-}
-@page {
-margin: 0;
-}
+    @page { margin: 0; }
+
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        display: block !important;
+    }
+    .container {
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        max-width: none;
+    }
+
+    /* Hide everything except the slips */
+    body > :not(.container),
+    .container > :not(#step-4),
+    #step-4 > :not(#slip-preview) {
+        display: none !important;
+    }
+    .slip-preview { margin: 0 !important; }
+
+    /* One slip */
+    .print-page {
+        width: 48mm;              /* printable width of 2" paper */
+        padding: 1mm 0 2mm 0;
+        font-family: monospace;
+        font-size: 11px;
+        line-height: 1.25;
+        text-align: left;
+        color: #000;
+        page-break-after: always; /* each piece still gets its own slip */
+        break-after: page;
+    }
+    .print-page:last-child {      /* no blank feed after the final slip */
+        page-break-after: auto;
+        break-after: auto;
+    }
+
+    .print-page p   { margin: 0 0 1px 0 !important; }
+    .print-page div { font-size: 11px !important; margin-bottom: 2px !important; }
+
+    /* Day/date header: still big enough to spot on the shelf */
+    .print-page .slip-header-date {
+        font-size: 16px !important;
+        border-bottom: 1px dashed #000;
+        padding-bottom: 2px;
+        margin-bottom: 3px !important;
+    }
+
+    /* The fake barcode isn't scannable, so skip it */
+    .print-page .barcode-mock { display: none !important; }
+
+    /* "Place slip on the bisque shelf" line */
+    .print-page p:last-child {
+        font-size: 10px !important;
+        margin-top: 3px !important;
+    }
 }
 /* ──────────────────────────────────────────────────────────────── */
 </style>
@@ -215,7 +253,7 @@ margin: 0;
 <!-- STEP 0: Welcome / Mode Selection -->
 <div id="step-0" class="step active">
 <!-- Brand Logo Embedded At the Top of Step 0 -->
-<img id="studio-logo" src="studio-logo.png" alt="Fall Kill Creative Works Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
+<img id="logo" src="logo.png" alt="Fall Kill Creative Works Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
 
 <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Hello! What are we doing today?</h3>
 <div class="btn-group" style="flex-direction: column; gap: 20px;">
@@ -337,8 +375,6 @@ margin: 0;
 
 <label for="clay-type-select">Select Clay Type:</label>
 <select id="clay-type-select" onchange="calculateClayPrice()">
-            <option value="New" data-price="16.00">New Bag — $16.00</option>
-            <option value="Reclaim" data-price="5.00">Reclaim Bag — $5.00</option>
             <option value="New" data-price="17.57">New Bag — $17.57</option>
             <option value="Reclaim" data-price="6.47">Reclaim Bag — $6.47</option>
 </select>
@@ -578,9 +614,9 @@ let d = parseFloat(document.getElementById('depth').value) || 0;
 const qty = parseInt(document.getElementById('firing-quantity').value) || 1;
 
 // Force-snap values on-screen before doing the final calculations
-if (h > 0 && h < 1) { h = 1.00; document.getElementById('height').value = "1.00"; }
-if (w > 0 && w < 1) { w = 1.00; document.getElementById('width').value = "1.00"; }
-if (d > 0 && d < 1) { d = 1.00; document.getElementById('depth').value = "1.00"; }
+if (h > 0 && h < 1) h = 1.00;
+if (w > 0 && w < 1) w = 1.00;
+if (d > 0 && d < 1) d = 1.00;
 
 const volume = h * w * d;
 document.getElementById('vol-display').innerText = volume.toFixed(2);
@@ -652,6 +688,10 @@ const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
 let slipHTML = "";
 
 if (type === 'firing') {
+validateMinDimension(document.getElementById('height'));
+validateMinDimension(document.getElementById('width'));
+validateMinDimension(document.getElementById('depth'));
+const h = document.getElementById('height').value;
 const h = document.getElementById('height').value;
 const w = document.getElementById('width').value;
 const d = document.getElementById('depth').value;
@@ -850,13 +890,11 @@ document.getElementById(`step-${stepNum}`).classList.add('active');
 }
 
 function prevStep(stepNum) {
-if (stepNum === 1) {
-nextStep(0);
-} else if (stepNum === '3-firing' || stepNum === '3-clay') {
-nextStep(2);
-} else {
-nextStep(stepNum);
-}
+    if (stepNum === 1) {
+        nextStep(0);
+    } else {
+        nextStep(stepNum);
+    }
 }
 
 function resetForm() {
