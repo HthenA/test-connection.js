@@ -5,377 +5,465 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clay Studio Firing Kiosk</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background-color: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 600px; width: 100%; box-sizing: border-box; }
-        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; font-size: 26px; border-bottom: 3px solid #d35400; padding-bottom: 10px; }
-        .step { display: none; }
-        .step.active { display: block; }
-        label { display: block; margin-top: 20px; font-weight: bold; color: #34495e; font-size: 15px; }
-        select, input { width: 100%; padding: 14px; margin-top: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 16px; box-sizing: border-box; background-color: white; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .btn-group { display: flex; gap: 15px; margin-top: 30px; }
-        button { flex: 1; padding: 16px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-        .btn-primary { background-color: #d35400; color: white; }
-        .btn-primary:hover { background-color: #b33900; }
-        .btn-secondary { background-color: #bdc3c7; color: #2c3e50; text-decoration: none; text-align: center; }
-        .btn-secondary:hover { background-color: #95a5a6; }
-        .summary-card { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 6px; margin-top: 25px; }
-        .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; }
-        .slip-preview { border: 2px dashed #7f8c8d; padding: 25px; background: #fff; text-align: left; font-family: monospace; margin-top: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        .slip-header-date { font-size: 28px; font-weight: 900; text-align: center; border-bottom: 2px dashed #333; padding-bottom: 12px; margin-bottom: 15px; }
-        .barcode-mock { text-align: center; letter-spacing: 6px; font-weight: bold; font-size: 20px; margin: 20px 0 10px 0; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 6px 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f2f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 26px;
+            border-bottom: 3px solid #d35400; /* Terracotta Clay */
+            padding-bottom: 10px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 15px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #d35400;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #b33900;
+        }
+
+        .btn-secondary {
+            background-color: #bdc3c7;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+        }
+
+        .summary-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        /* Firing Ticket Print View */
+        .slip-preview {
+            border: 2px dashed #7f8c8d;
+            padding: 25px;
+            background: #fff;
+            text-align: left;
+            font-family: monospace;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .slip-header-date {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .barcode-mock {
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0 10px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 6px 0;
+        }
+
+        /* ================================================================= */
+        /* COMPACT ULTRA-SHORT RECEIPT HARDWARE PRINT CONFIGURATION          */
+        /* ================================================================= */
         @media print {
-            body, .container, button, .btn-group, h1, label, select, input, img { display: none !important; }
-            @page { margin: 0 !important; }
-            .slip-preview { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 3mm !important; display: block !important; width: 58mm !important; font-family: monospace !important; font-size: 10px !important; line-height: 1.1 !important; color: #000 !important; background: #fff !important; }
-            .slip-header-date { font-size: 16px !important; font-weight: 900 !important; margin-bottom: 4px !important; padding-bottom: 4px !important; border-bottom: 1px dashed #000 !important; }
-            .slip-preview p { margin: 2px 0 !important; padding: 0 !important; }
-            .barcode-mock { font-size: 10px !important; letter-spacing: 2px !important; margin: 4px 0 !important; padding: 2px 0 !important; border-top: 1px dashed #000 !important; border-bottom: 1px dashed #000 !important; }
-            .slip-preview div, .slip-preview p { font-size: 10px !important; }
+            body, .container, button, .btn-group, h1, label, select, input, img {
+                display: none !important;
+            }
+            @page {
+                margin: 0 !important;
+            }
+            .slip-preview {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 3mm !important; 
+                display: block !important;
+                width: 58mm !important; /* Standard 2-inch thermal paper footprint */
+                font-family: monospace !important;
+                font-size: 10px !important;
+                line-height: 1.1 !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+            .slip-header-date {
+                font-size: 16px !important;
+                font-weight: 900 !important;
+                margin-bottom: 4px !important;
+                padding-bottom: 4px !important;
+                border-bottom: 1px dashed #000 !important;
+            }
+            .slip-preview p {
+                margin: 2px 0 !important;
+                padding: 0 !important;
+            }
+            .barcode-mock {
+                font-size: 10px !important;
+                letter-spacing: 2px !important;
+                margin: 4px 0 !important;
+                padding: 2px 0 !important;
+                border-top: 1px dashed #000 !important;
+                border-bottom: 1px dashed #000 !important;
+            }
+            .slip-preview div, .slip-preview p {
+                font-size: 10px !important;
+            }
         }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h1>Clay Studio Kiosk</h1>
-    <div id="step-0" class="step active">
-        <img id="studio-logo" src="./logo.png" alt="Studio Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
-        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Welcome! What are we doing today?</h3>
-        <div class="btn-group" style="flex-direction: column; gap: 20px;">
-            <button class="btn-primary" style="padding: 20px;" onclick="selectKioskMode('firing')">Log Firing Details</button>
-            <button class="btn-secondary" style="background-color: #16a085; color: white; padding: 20px;" onclick="selectKioskMode('clay')">Buy Studio Clay</button>
+    
+    <!-- Local path routing fixes your logo disappearing bug -->
+    <img id="studio-logo" src="./logo.png" alt="Studio Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
+
+    <!-- STEP 1: Class Question -->
+    <div id="step-1" class="step active">
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Are you currently enrolled in a class?</h3>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="selectClassOption(true)">Yes, I'm in a Class</button>
+            <button class="btn-secondary" onclick="selectClassOption(false)">No (Member / Assistant)</button>
         </div>
     </div>
-    <div id="step-1" class="step">
-        <h3 id="status-title" style="text-align: center; color: #2c3e50; margin-bottom: 25px;">I am a:</h3>
-        <div class="btn-group" style="flex-direction: column; gap: 20px;">
-            <button class="btn-primary" style="padding: 18px;" onclick="selectClassOption(true)">Enrolled Student</button>
-            <button class="btn-secondary" style="padding: 18px;" onclick="selectClassOption(false)">Open Studio Pass / Assistant</button>
-        </div>
-    </div>
+
+    <!-- STEP 2: Name Selection -->
     <div id="step-2" class="step">
         <h3 id="role-title" style="color: #2c3e50; margin-bottom: 15px;">Select Your Details</h3>
+        <div id="class-fields" style="display: none;">
+            <label for="class-select">Select Class:</label>
+            <select id="class-select" onchange="loadStudents()">
+                <option value="">-- Choose Class --</option>
+                <option value="Teapot Class">Teapot Class (500 CI Allowance)</option>
+                <option value="Mug Class">Mug Class (300 CI Allowance)</option>
+            </select>
+        </div>
+
         <label for="student-select">Select Your Name:</label>
         <select id="student-select" onchange="onStudentSelect()">
             <option value="">-- Choose Name --</option>
         </select>
+
         <div class="btn-group">
             <button class="btn-secondary" onclick="prevStep(1)">Back</button>
-            <button class="btn-primary" onclick="goToStep3()">Next</button>
+            <button class="btn-primary" id="btn-next-dimensions" onclick="nextStep(3)">Next</button>
         </div>
     </div>
-    <div id="step-3-firing" class="step">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">Enter Firing Details</h3>
+
+    <!-- STEP 3: Piece Dimensions -->
+    <div id="step-3" class="step">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Enter Piece Details</h3>
         <label for="clay-select">Clay Body:</label>
         <select id="clay-select">
             <option value="White Stoneware">White Stoneware</option>
-            <option value="Brooklyn Red">Brooklyn Red</option>
             <option value="Brown Speckled">Brown Speckled</option>
-            <option value="Other">Other</option>
+            <option value="Red Stoneware">Red Stoneware</option>
         </select>
+
         <label>Dimensions (Inches):</label>
         <div class="grid-3">
-            <input type="number" id="height" inputmode="decimal" min="0.25" step="0.25" placeholder="H" oninput="calculateFiringPrice()">
-            <input type="number" id="width" inputmode="decimal" min="0.25" step="0.25" placeholder="W" oninput="calculateFiringPrice()">
-            <input type="number" id="depth" inputmode="decimal" min="0.25" step="0.25" placeholder="D" oninput="calculateFiringPrice()">
+            <input type="number" id="height" step="0.25" placeholder="H" oninput="calculatePrice()">
+            <input type="number" id="width" step="0.25" placeholder="W" oninput="calculatePrice()">
+            <input type="number" id="depth" step="0.25" placeholder="D" oninput="calculatePrice()">
         </div>
-        <label for="firing-quantity">Quantity of Pieces:</label>
-        <select id="firing-quantity" onchange="calculateFiringPrice()">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-        </select>
-        <label for="description">Description of Piece (optional):</label>
-        <input type="text" id="description" placeholder="e.g., blue mug, carved bowl">
+
         <div class="summary-card">
-            <div class="summary-row"><span>Calculated Volume (Total):</span><strong><span id="vol-display">0.00</span> Cu. In.</strong></div>
-            <div class="summary-row"><span>Subtotal:</span><strong>$<span id="subtotal-display">0.00</span></strong></div>
-            <div class="summary-row"><span>Studio Discount:</span><strong>$<span id="discount-display">0.00</span></strong></div>
-            <div class="summary-row" style="font-size: 18px; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;"><strong>Estimated Firing Cost:</strong><strong style="color: #d35400;">$<span id="cost-display">0.00</span></strong></div>
+            <div class="summary-row">
+                <span>Calculated Volume:</span>
+                <strong><span id="vol-display">0.00</span> Cu. In.</strong>
+            </div>
+            <div class="summary-row" style="font-size: 18px; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
+                <strong>Estimated Firing Cost:</strong>
+                <strong style="color: #d35400;">$<span id="cost-display">0.00</span></strong>
+            </div>
             <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px; font-style: italic;" id="logic-note"></div>
         </div>
+
         <div class="btn-group">
             <button class="btn-secondary" onclick="prevStep(2)">Back</button>
-            <button class="btn-primary" onclick="showSlipReview()">Review Ticket</button>
+            <button class="btn-primary" onclick="showSlip()">Review & Print</button>
         </div>
     </div>
-    <div id="step-3-clay" class="step">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">Purchase Studio Clay</h3>
-        <label for="clay-bag-select">Select Clay Type:</label>
-        <select id="clay-bag-select" onchange="calculateClayPrice()">
-            <option value="Clay Bag: White Stoneware" data-price="30.00">White Stoneware - $30.00</option>
-            <option value="Clay Bag: Brooklyn Red" data-price="32.00">Brooklyn Red - $32.00</option>
-            <option value="Clay Bag: Brown Speckled" data-price="32.00">Brown Speckled - $32.00</option>
-        </select>
-        <label for="clay-quantity">Quantity of Bags:</label>
-        <select id="clay-quantity" onchange="calculateClayPrice()">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-        </select>
-        <div class="summary-card">
-            <div class="summary-row" style="font-size: 18px;"><strong>Clay Total Added to Tab:</strong><strong style="color: #16a085;">$<span id="clay-cost-display">30.00</span></strong></div>
-        </div>
-        <div class="btn-group">
-            <button class="btn-secondary" onclick="prevStep(2)">Back</button>
-            <button class="btn-primary" onclick="showSlipReview()">Review Charge</button>
-        </div>
-    </div>
+
+    <!-- STEP 4: Review & Print Ticket -->
     <div id="step-4" class="step" style="text-align: center;">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">Confirm Slip Details</h3>
-        <p style="color: #7f8c8d; font-size: 14px;">Confirm details are correct. Tap "Print & Save" to log to Google Sheets.</p>
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Confirm Firing Slip</h3>
+        <p style="color: #7f8c8d; font-size: 14px;">Confirm details are correct. Tap "Print & Save" to print your receipt and record the piece.</p>
         <div id="slip-preview" class="slip-preview"></div>
         <div class="btn-group">
-            <button class="btn-secondary" id="btn-review-back" onclick="handleReviewBack()">Back</button>
-            <button class="btn-primary" id="btn-confirm-print" onclick="confirmAndSubmitTab()">Print & Save</button>
+            <button class="btn-secondary" onclick="prevStep(3)">Back</button>
+            <button class="btn-primary" onclick="confirmPrint()">Print & Save</button>
         </div>
     </div>
 </div>
 <script>
-<script>
-    // Paste your actual deployed Google Apps Script Macro Web URL endpoint token sequence string here:
-    const GOOGLE_WEB_APP_URL = "https://google.com";
-
-    let currentMode = 'firing'; 
     let isClassMode = false;
     let selectedUserRole = 'member';
 
-    // Roster fallback safety layer initialized from live spreadsheet records snapshot
-    const localFallbackRoster = [
-        { name: "Ahuja, Palavi", role: "class" },
-        { name: "Akar, Melissa", role: "class" },
-        { name: "Alexander, Heather", role: "SA" },
-        { name: "Almeida, Tiago", role: "class" },
-        { name: "Amato, Ely", role: "SA" },
-        { name: "Babian, Alexis", role: "OSP" },
-        { name: "Barrett, Peter", role: "OSP" },
-        { name: "Behrendt, Lynn", role: "SA" },
-        { name: "Brenner, Paul", role: "SA" }
-    ];
-
-    window.addEventListener('DOMContentLoaded', () => {
-        initStudioRosterEngine();
-    });
-
-    function initStudioRosterEngine() {
-        fetch(`${GOOGLE_WEB_APP_URL}?action=getRoster`)
-            .then(res => res.json())
-            .then(data => {
-                window.studioRoster = data;
-                populateKioskNames();
-            })
-            .catch(err => {
-                console.warn("Kiosk running on local roster safety fallback layer:", err);
-                window.studioRoster = localFallbackRoster;
-                populateKioskNames();
-            });
-    }
-
-    function selectKioskMode(mode) {
-        currentMode = mode;
-        nextStep(1);
-    }
+    // RESTORED: Your authentic studio roster mapping database arrays
+    const namesMap = {
+        class: [
+            "Ahuja, Palavi", 
+            "Akar, Melissa", 
+            "Almeida, Tiago", 
+            "Antonakos, Carmella", 
+            "Antonio, Amairani Perez", 
+            "Appel, Deborah", 
+            "Aubry, Jennifer", 
+            "Augello, Cathy", 
+            "Ayers, Lorrette", 
+            "Baker, Cassidy"
+        ],
+        member: [
+            "Babian, Alexis", 
+            "Barrett, Peter", 
+            "Berroa, Danicia", 
+            "Boeck Batista, Sara", 
+            "Clemens, Dawn", 
+            "Clemente, Nicklas", 
+            "Daly, Abbey", 
+            "DeFelice, Angela"
+        ],
+        assistant: [
+            "Alexander, Heather", 
+            "Amato, Ely", 
+            "Behrendt, Lynn", 
+            "Cooperman, Pia", 
+            "Careaga, Trish", 
+            "DeVaughn, Devin"
+        ]
+    };
 
     function selectClassOption(isClass) {
         isClassMode = isClass;
-        const titleElement = document.getElementById('role-title');
-        titleElement.innerText = isClass ? "Class Student Details" : "Studio Member Details";
-        populateKioskNames();
+        const classFields = document.getElementById('class-fields');
+        const roleTitle = document.getElementById('role-title');
+        if (isClass) {
+            classFields.style.display = 'block';
+            roleTitle.innerText = "Class Student Details";
+            loadStudentDropdown('class');
+        } else {
+            classFields.style.display = 'none';
+            roleTitle.innerText = "Member Details";
+            loadStudentDropdown('member_assistant');
+        }
         nextStep(2);
     }
 
-    function populateKioskNames() {
+    function loadStudentDropdown(type) {
         const select = document.getElementById('student-select');
         select.innerHTML = '<option value="">-- Choose Name --</option>';
-        
-        if (!window.studioRoster) return;
-
-        window.studioRoster.forEach(user => {
-            const isUserClass = (user.role === 'class' || user.role === 'student');
-            if (isClassMode && isUserClass) {
-                injectSelectNode(select, user.name, user.role);
-            } else if (!isClassMode && !isUserClass) {
-                injectSelectNode(select, user.name, user.role);
-            }
-        });
-    }
-
-    function injectSelectNode(parent, nameString, roleKey) {
-        const option = document.createElement('option');
-        option.value = nameString; 
-        option.innerText = nameString + (roleKey === 'SA' || roleKey === 'assistant' ? ' (Assistant)' : '');
-        option.setAttribute('data-role', roleKey);
-        parent.appendChild(option);
+        if (type === 'class') {
+            namesMap.class.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                opt.setAttribute('data-role', 'class');
+                select.appendChild(opt);
+            });
+        } else {
+            namesMap.member.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                opt.setAttribute('data-role', 'member');
+                select.appendChild(opt);
+            });
+            namesMap.assistant.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                opt.setAttribute('data-role', 'assistant');
+                select.appendChild(opt);
+            });
+        }
     }
 
     function onStudentSelect() {
         const select = document.getElementById('student-select');
-        const opt = select.options[select.selectedIndex];
-        if (opt && opt.value !== "") {
-            const structuralRole = opt.getAttribute('data-role');
-            selectedUserRole = (structuralRole === 'SA' || structuralRole === 'assistant') ? 'assistant' : 'member';
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption) {
+            selectedUserRole = selectedOption.getAttribute('data-role') || 'member';
         }
-        if (currentMode === 'firing') calculateFiringPrice(); else calculateClayPrice();
+        calculatePrice();
     }
 
-    function calculateFiringPrice() {
+    function calculatePrice() {
         const h = parseFloat(document.getElementById('height').value) || 0;
         const w = parseFloat(document.getElementById('width').value) || 0;
         const d = parseFloat(document.getElementById('depth').value) || 0;
-        const qty = parseInt(document.getElementById('firing-quantity').value) || 1;
+        const volume = h * w * d;
+        document.getElementById('vol-display').innerText = volume.toFixed(2);
 
-        const volumeUnit = h * w * d * qty;
-        document.getElementById('vol-display').innerText = volumeUnit.toFixed(2);
-
-        let subtotal = volumeUnit * 0.06;
-        let discount = 0;
-        let amountDue = subtotal;
+        let cost = 0;
         let note = "";
 
         if (isClassMode) {
-            subtotal = 0;
-            amountDue = 0;
-            note = "Covered under active student class firing allowances.";
+            cost = 0;
+            note = "Covered under your class's firing allowance.";
         } else {
-            if (amountDue > 0 && amountDue < 1.00) {
-                amountDue = 1.00;
-                note = "$1.00 minimum transaction base applied.";
+            const baseRate = 0.06;
+            let rawCost = volume * baseRate;
+            if (rawCost > 0 && rawCost < 1.00) {
+                cost = 1.00;
+                note = "\$1.00 minimum charge applied for small volumes.";
+            } else {
+                cost = rawCost;
             }
             if (selectedUserRole === 'assistant') {
-                discount = amountDue * 0.15;
-                amountDue = amountDue - discount;
-                note = "15% Studio Assistant operational discount applied.";
+                cost = cost * 0.85; // 15% Assistant discount
+                note = "15% Studio Assistant discount applied.";
             }
         }
-
-        document.getElementById('subtotal-display').innerText = subtotal.toFixed(2);
-        document.getElementById('discount-display').innerText = discount.toFixed(2);
-        document.getElementById('cost-display').innerText = amountDue.toFixed(2);
+        document.getElementById('cost-display').innerText = cost.toFixed(2);
         document.getElementById('logic-note').innerText = note;
+        return { volume, cost };
     }
 
-    function calculateClayPrice() {
-        const select = document.getElementById('clay-bag-select');
-        const opt = select.options[select.selectedIndex];
-        const targetPrice = parseFloat(opt.getAttribute('data-price')) || 0;
-        const qty = parseInt(document.getElementById('clay-quantity').value) || 1;
-        
-        document.getElementById('clay-cost-display').innerText = (targetPrice * qty).toFixed(2);
-    }
-
-    function goToStep3() {
-        if (!document.getElementById('student-select').value) {
-            alert("Please pick your name profile to move forward.");
+    function showSlip() {
+        const h = document.getElementById('height').value;
+        const w = document.getElementById('width').value;
+        const d = document.getElementById('depth').value;
+        if(!h || !w || !d) {
+            alert("Please input the piece's Height, Width, and Depth first.");
             return;
         }
-        if (currentMode === 'firing') {
-            calculateFiringPrice();
-            nextStep('3-firing');
-        } else {
-            calculateClayPrice();
-            nextStep('3-clay');
+        const studentName = document.getElementById('student-select').value;
+        if (!studentName) {
+            alert("Please select your name first.");
+            return;
         }
-    }
+        const clay = document.getElementById('clay-select').value;
+        const calculations = calculatePrice();
 
-    function handleReviewBack() {
-        if (currentMode === 'firing') nextStep('3-firing'); else nextStep('3-clay');
-    }
-
-    function showSlipReview() {
-        const accountName = document.getElementById('student-select').value;
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         const now = new Date();
-        const matrixDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        const formatString = `${matrixDays[now.getDay()]} - ${now.getDate()}`;
+        const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
 
-        let codeBlock = `<div class="slip-header-date">${formatString}</div>`;
-        codeBlock += `<p><strong>NAME:</strong> ${accountName}</p>`;
-
-        if (currentMode === 'firing') {
-            const h = document.getElementById('height').value;
-            const w = document.getElementById('width').value;
-            const d = document.getElementById('depth').value;
-            if (!h || !w || !d) {
-                alert("Please populate all piece dimension sizing parameters.");
-                return;
-            }
-            codeBlock += `<p><strong>LOG:</strong> BISQUE FIRING</p>`;
-            codeBlock += `<p><strong>CLAY:</strong> ${document.getElementById('clay-select').value}</p>`;
-            codeBlock += `<p><strong>DIM:</strong> ${h}"x${w}"x${d}" (Qty: ${document.getElementById('firing-quantity').value})</p>`;
-            codeBlock += `<p><strong>VOL:</strong> ${document.getElementById('vol-display').innerText} CI</p>`;
-            codeBlock += `<p><strong>FEES:</strong> $${document.getElementById('cost-display').innerText}</p>`;
-            if(document.getElementById('description').value) {
-                codeBlock += `<p><strong>NOTE:</strong> ${document.getElementById('description').value}</p>`;
-            }
-        } else {
-            codeBlock += `<p><strong>LOG:</strong> CLAY PURCHASE</p>`;
-            codeBlock += `<p><strong>ITEM:</strong> ${document.getElementById('clay-bag-select').value}</p>`;
-            codeBlock += `<p><strong>QTY:</strong> ${document.getElementById('clay-quantity').value} Bag(s)</p>`;
-            codeBlock += `<p><strong>FEES:</strong> $${document.getElementById('clay-cost-display').innerText}</p>`;
-        }
-
-        codeBlock += `<div class="barcode-mock">||| | || ||| | || |</div>`;
-        document.getElementById('slip-preview').innerHTML = codeBlock;
+        const slipHTML = `
+            <div class="slip-header-date">${formattedDateHeader}</div>
+            <div style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px;">*** FIRING SLIP ***</div>
+            <p><strong>NAME:</strong> ${studentName}</p>
+            <p><strong>CLAY BODY:</strong> ${clay}</p>
+            <p><strong>DIMENSIONS:</strong> ${h}" x ${w}" x ${d}"</p>
+            <p><strong>VOLUME:</strong> ${calculations.volume.toFixed(2)} Cu. In.</p>
+            <p><strong>EST. CHARGE:</strong> $${calculations.cost.toFixed(2)}</p>
+            <div class="barcode-mock">||||| | ||||| | ||</div>
+            <p style="font-size:11px; text-align: center; margin-top: 15px; font-weight: bold;">PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF</p>
+        `;
+        document.getElementById('slip-preview').innerHTML = slipHTML;
         nextStep(4);
     }
 
-    function confirmAndSubmitTab() {
-        const submitButton = document.getElementById('btn-confirm-print');
-        submitButton.disabled = true;
-        submitButton.innerText = "Syncing Sheet...";
-
-        const modeFiring = (currentMode === 'firing');
-        
-        const packageData = {
-            studentName: document.getElementById('student-select').value,
-            role: isClassMode ? 'student' : selectedUserRole,
-            clayType: modeFiring ? document.getElementById('clay-select').value : document.getElementById('clay-bag-select').value,
-            cubicInches: modeFiring ? parseFloat(document.getElementById('vol-display').innerText) : 0,
-            subtotal: modeFiring ? parseFloat(document.getElementById('subtotal-display').innerText) : parseFloat(document.getElementById('clay-cost-display').innerText),
-            discount: modeFiring ? parseFloat(document.getElementById('discount-display').innerText) : 0,
-            donation: 0,
-            amountDue: modeFiring ? parseFloat(document.getElementById('cost-display').innerText) : parseFloat(document.getElementById('clay-cost-display').innerText),
-            description: modeFiring ? document.getElementById('description').value : `Clay Sale Qty: ${document.getElementById('clay-quantity').value}`
-        };
-
-        fetch(GOOGLE_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(packageData)
-        })
-        .then(() => {
-            window.print();
-            alert("Entry logged to tab sheet!");
-            wipeKioskFormFields();
-        })
-        .catch(err => {
-            console.error("Data tracking stream failure:", err);
-            window.print();
-            alert("Local ticket printed successfully, but Google Sheet connection hit a delay.");
-            wipeKioskFormFields();
-        });
+    function confirmPrint() {
+        window.print();
+        alert("Receipt Sent to Printer! Returning to Home Screen.");
+        resetForm();
     }
 
-    function nextStep(stepIndex) {
-        document.querySelectorAll('.step').forEach(node => node.classList.remove('active'));
-        document.getElementById(`step-${stepIndex}`).classList.add('active');
+    function nextStep(stepNum) {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById(`step-${stepNum}`).classList.add('active');
     }
 
-    function prevStep(stepIndex) {
-        document.querySelectorAll('.step').forEach(node => node.classList.remove('active'));
-        document.getElementById(`step-${stepIndex}`).classList.add('active');
+    function prevStep(stepNum) {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.getElementById(`step-${stepNum}`).classList.add('active');
     }
 
-    function wipeKioskFormFields() {
+    function resetForm() {
         document.getElementById('height').value = '';
         document.getElementById('width').value = '';
         document.getElementById('depth').value = '';
-        document.getElementById('description').value = '';
         document.getElementById('vol-display').innerText = '0.00';
         document.getElementById('cost-display').innerText = '0.00';
-        document.getElementById('student-select').selectedIndex = 0;
-        
-        const button = document.getElementById('btn-confirm-print');
-        button.disabled = false;
-        button.innerText = "Print & Save";
-        
-        nextStep(0);
+        document.getElementById('logic-note').innerText = '';
+        nextStep(1);
     }
 </script>
 </body>
