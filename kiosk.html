@@ -95,6 +95,8 @@
         .btn-secondary {
             background-color: #bdc3c7;
             color: #2c3e50;
+            text-decoration: none;
+            text-align: center;
         }
 
         .btn-secondary:hover {
@@ -116,7 +118,7 @@
             font-size: 16px;
         }
 
-        /* Firing Ticket Base Screen Styling View */
+        /* Screen Preview Box Styling */
         .slip-preview {
             border: 2px dashed #7f8c8d;
             padding: 25px;
@@ -151,12 +153,10 @@
         /* COMPACT ULTRA-SHORT RECEIPT HARDWARE PRINT CONFIGURATION          */
         /* ================================================================= */
         @media print {
-            /* Strip out all structural webpage container layout elements */
             body, .container, button, .btn-group, h1, label, select, input, img {
                 display: none !important;
             }
             
-            /* Tighten up ticket boundaries to minimize vertical paper use */
             @page {
                 margin: 0 !important;
             }
@@ -165,9 +165,9 @@
                 border: none !important;
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: 4mm !important; 
+                padding: 3mm !important; 
                 display: block !important;
-                width: 58mm !important; /* Forces 2-inch standard micro thermal scale */
+                width: 58mm !important; /* Locks width to a standard 2-inch mini thermal slip */
                 font-family: monospace !important;
                 font-size: 10px !important;
                 line-height: 1.1 !important;
@@ -176,22 +176,22 @@
             }
 
             .slip-header-date {
-                font-size: 18px !important;
+                font-size: 16px !important;
                 font-weight: 900 !important;
-                margin-bottom: 6px !important;
+                margin-bottom: 4px !important;
                 padding-bottom: 4px !important;
                 border-bottom: 1px dashed #000 !important;
             }
 
             .slip-preview p {
-                margin: 2px 0 !important; /* Compresses text block gaps tight vertically */
+                margin: 2px 0 !important;
                 padding: 0 !important;
             }
 
             .barcode-mock {
-                font-size: 11px !important;
+                font-size: 10px !important;
                 letter-spacing: 2px !important;
-                margin: 6px 0 !important;
+                margin: 4px 0 !important;
                 padding: 2px 0 !important;
                 border-top: 1px dashed #000 !important;
                 border-bottom: 1px dashed #000 !important;
@@ -210,12 +210,11 @@
 
     <!-- STEP 0: Welcome / Mode Selection -->
     <div id="step-0" class="step active">
-        <!-- FIXED PATH: Explicit folder routing ensures asset visibility -->
         <img id="studio-logo" src="./logo.png" alt="Studio Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
-        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Welcome! What are we doing today?</h3>
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Hello! What are we doing today?</h3>
         <div class="btn-group" style="flex-direction: column; gap: 20px;">
             <button class="btn-primary" style="padding: 20px;" onclick="selectKioskMode('firing')">Log Firing Details</button>
-            <button class="btn-secondary" style="background-color: #16a085; color: white; padding: 20px;" onclick="selectKioskMode('clay')">Buy Clay</button>
+            <button class="btn-secondary" style="background-color: #16a085; color: white; padding: 20px;" onclick="selectKioskMode('clay')">Buy Studio Clay</button>
         </div>
     </div>
 
@@ -223,8 +222,8 @@
     <div id="step-1" class="step">
         <h3 id="status-title" style="text-align: center; color: #2c3e50; margin-bottom: 25px;">I am a:</h3>
         <div class="btn-group" style="flex-direction: column; gap: 20px;">
-            <button class="btn-primary" style="padding: 18px;" onclick="selectClassOption(true)">Student</button>
-            <button class="btn-secondary" style="padding: 18px;" onclick="selectClassOption(false)">Open Studio Pass / Studio Assistant</button>
+            <button class="btn-primary" style="padding: 18px;" onclick="selectClassOption(true)">Enrolled Student</button>
+            <button class="btn-secondary" style="padding: 18px;" onclick="selectClassOption(false)">Open Studio Pass / Assistant</button>
         </div>
     </div>
 
@@ -268,7 +267,7 @@
         </select>
 
         <label for="description">Description of Piece (optional):</label>
-        <input type="text" id="description" placeholder="e.g., blue mug, large vase">
+        <input type="text" id="description" placeholder="e.g., blue mug, carved bowl">
 
         <div class="summary-card">
             <div class="summary-row">
@@ -280,4 +279,6 @@
                 <strong>$<span id="subtotal-display">0.00</span></strong>
             </div>
             <div class="summary-row">
-                <span>Discount Applied:</span>
+                <span>Studio Discount:</span>
+                <strong>$<span id="discount-display">0.00</span></strong>
+            </div>
