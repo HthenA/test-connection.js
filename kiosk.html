@@ -146,6 +146,241 @@
             border-bottom: 1px solid #333;
             padding: 6px 0;
         }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Clay Studio Kiosk</h1>
+
+    <!-- STEP 0: Welcome / Mode Selection -->
+    <div id="step-0" class="step active">
+        <!-- Brand Logo Embedded At the Top of Step 0 -->
+        <img id="studio-logo" src="logo.png" alt="Fall Kill Creative Works Logo" style="max-width: 160px; display: block; margin: 0 auto 25px auto;">
+        
+        <h3 style="text-align: center; color: #2c3e50; margin-bottom: 25px;">Welcome! What are we doing today?</h3>
+        <div class="btn-group" style="flex-direction: column; gap: 20px;">
+            <button class="btn-primary" style="padding: 20px;" onclick="selectKioskMode('firing')">Firing</button>
+            <button class="btn-secondary" style="background-color: #16a085; color: white; padding: 20px;" onclick="selectKioskMode('clay')">Buy Clay</button>
+        </div>
+    </div>
+
+    <!-- STEP 1: Roster Status Check -->
+    <div id="step-1" class="step">
+        <h3 id="status-title" style="text-align: center; color: #2c3e50; margin-bottom: 25px;">I am a</h3>
+        <div class="btn-group" style="flex-direction: column; gap: 20px;">
+            <button class="btn-primary" style="padding: 18px;" onclick="selectClassOption(true)">Student</button>
+            <button class="btn-secondary" style="padding: 18px;" onclick="selectClassOption(false)">Open Studio Pass / Studio Assistant</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: Name Selection -->
+    <div id="step-2" class="step">
+        <h3 id="role-title" style="color: #2c3e50; margin-bottom: 15px;">Select Your Details</h3>
+
+        <label for="student-select">Select Your Name:</label>
+        <select id="student-select" onchange="onStudentSelect()">
+            <option value="">-- Choose Name --</option>
+            <!-- Injected dynamically from Google Sheets -->
+        </select>
+
+        <div class="btn-group">
+            <button class="btn-secondary" onclick="prevStep(1)">Back</button>
+            <button class="btn-primary" onclick="goToStep3()">Next</button>
+        </div>
+    </div>
+
+    <!-- STEP 3a: Firing Entry -->
+    <div id="step-3-firing" class="step">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">Enter Firing Details</h3>
+        
+        <label for="clay-select">Clay Body:</label>
+        <select id="clay-select">
+            <option value="White Stoneware">White Stoneware</option>
+            <option value="Brooklyn Red">Brooklyn Red</option>
+            <option value="Brown Speckled">Brown Speckled</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Dimensions (Inches):</label>
+        <div class="grid-3">
+            <input type="number" id="height" inputmode="decimal" min="1" step="0.25" placeholder="H" oninput="calculateFiringPrice()">
+            <input type="number" id="width" inputmode="decimal" min="1" step="0.25" placeholder="W" oninput="calculateFiringPrice()">
+            <input type="number" id="depth" inputmode="decimal" min="1" step="0.25" placeholder="D" oninput="calculateFiringPrice()">
+        </div>
+
+        <label for="firing-quantity">Quantity of Pieces:</label>
+        <select id="firing-quantity" onchange="calculateFiringPrice()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+
+        <label for="description">Description of Piece (optional):</label>
+        <input type="text" id="description" placeholder="e.g., blue mug, large vase">
+
+        <div class="summary-card">
+            <div class="summary-row">
+                <span>Calculated Volume (per piece):</span>
+                <strong><span id="vol-display">0.00</span> Cu. In.</strong>
+            </div>
+            <div class="summary-row">
+                <span>Subtotal (before discounts):</span>
+                <strong>$<span id="subtotal-display">0.00</span></strong><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay Studio Firing Kiosk</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f2f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 26px;
+            border-bottom: 3px solid #d35400; /* Terracotta Clay */
+            padding-bottom: 10px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 15px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #d35400;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #b33900;
+        }
+
+        .btn-secondary {
+            background-color: #bdc3c7;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+        }
+
+        .summary-card {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        /* Firing Ticket Print View */
+        .slip-preview {
+            border: 2px dashed #7f8c8d;
+            padding: 25px;
+            background: #fff;
+            text-align: left;
+            font-family: monospace;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .slip-header-date {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .barcode-mock {
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0 10px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 6px 0;
+        }
 
         /* ================================================================= */
         /* COMPACT ULTRA-SHORT RECEIPT HARDWARE PRINT CONFIGURATION          */
