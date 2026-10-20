@@ -182,7 +182,7 @@ background-color: #b33900;
 /* ─── MULTI-PAGE PRINTING CSS ──────────────────────────────────── */
 /* ─── COMPACT RECEIPT PRINTING (2" / 58mm paper) ─────────────── */
 @media print {
-    @page { margin: 0; }
+    @page { size: 80mm 270mm; margin: 0; }
 
     html, body {
         margin: 0 !important;
@@ -207,7 +207,7 @@ background-color: #b33900;
 
     /* One slip */
     .print-page {
-        width: 48mm;              /* printable width of 2" paper */
+        width: 72mm;              /* printable width of 2" paper */
         padding: 1mm 0 2mm 0;
         font-family: monospace;
         font-size: 11px;
