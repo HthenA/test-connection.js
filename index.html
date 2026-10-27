@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Firing Kiosk</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d35400">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon-192.png">
 <style>
 body {
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -180,7 +184,7 @@ background-color: #b33900;
 }
 
 /* ─── MULTI-PAGE PRINTING CSS ──────────────────────────────────── */
-/* ─── COMPACT RECEIPT PRINTING (2" / 58mm paper) ─────────────── */
+/* ─── COMPACT RECEIPT PRINTING (80mm paper) ───────────────────── */
 @media print {
     @page { size: 80mm 270mm; margin: 0; }
 
@@ -208,7 +212,7 @@ background-color: #b33900;
 
     /* One slip */
     .print-page {
-        width: 72mm;              /* printable width of 2" paper */
+        width: 72mm;              /* printable width of 80mm paper */
         padding: 1mm 0 2mm 0;
         font-family: monospace;
         font-size: 11px;
@@ -788,6 +792,7 @@ const totalPrintCycles = printDuplicates ? 2 : 1;
 const now = new Date();
 const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
+const receiptSlips = []; // plain-text copies for direct printing
 
 for (let q = 1; q <= qty; q++) {
 let finalDescription = qty > 1 ? `${description} (${q} of ${qty})` : description;
@@ -823,10 +828,29 @@ const pageHTML = `
 // Append the page(s) based on duplicate count
 for (let c = 0; c < totalPrintCycles; c++) {
 slipPreview.innerHTML += pageHTML;
+receiptSlips.push({
+header: formattedDateHeader,
+title: kioskMode === 'firing' ? 'FIRING SLIP' : 'CLAY VOUCHER',
+lines: [
+['NAME:', studentName],
+[kioskMode === 'firing' ? 'CLAY BODY:' : 'PRODUCT:', detailName],
+...(kioskMode === 'firing' ? [
+['DIMENSIONS:', `${height.value}" x ${width.value}" x ${depth.value}"`],
+['VOLUME:', `${volume.toFixed(2)} Cu. In.`]
+] : []),
+['EST. CHARGE:', chargeText.trim()]
+],
+footer: kioskMode === 'firing' ? 'PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF' : 'HAND TICKET TO ASSISTANT TO RETRIEVE BAG'
+});
 }}
 
-// 2. Trigger the printer dialog (This runs EXACTLY ONCE, opening a single dialog containing all pages!)
+// 2. Print. On the Android tablet, send the slips straight to RawBT (no print dialog).
+//    Anywhere else (e.g. testing on a computer), fall back to the normal print dialog.
+if (/android/i.test(navigator.userAgent)) {
+printDirectToRawBT(receiptSlips);
+} else {
 window.print();
+}
 
 // 3. Log wirelessly to Google Apps Script Web App (creates a separate row per piece!)
 for (let q = 1; q <= qty; q++) {
@@ -917,6 +941,52 @@ document.getElementById('chk-roundup-donation').checked = false;
 document.getElementById('student-select').value = '';
 
 nextStep(0); 
+}
+
+// ─── DIRECT PRINTING TO RAWBT (80mm Netum) ──────────────────────────
+// Builds receipt-printer (ESC/POS) commands and hands them to the RawBT app,
+// which prints them without Chrome's print dialog. One cut after each slip.
+function printDirectToRawBT(slips) {
+const ESC = '\x1B', GS = '\x1D';
+const INIT = ESC + '@';
+const LEFT = ESC + 'a\x00', CENTER = ESC + 'a\x01';
+const BOLD_ON = ESC + 'E\x01', BOLD_OFF = ESC + 'E\x00';
+const BIG = GS + '!\x11', NORMAL = GS + '!\x00';
+const FEED_AND_CUT = GS + 'V\x42\x03'; // feed a little, then cut
+
+// The printer only knows plain letters: turn "é" into "e", drop emoji etc.
+const clean = t => String(t)
+.normalize('NFD').replace(/[̀-ͯ]/g, '')
+.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-')
+.replace(/[^\x20-\x7E]/g, '');
+
+let data = INIT;
+slips.forEach(slip => {
+data += LEFT + BIG + BOLD_ON + clean(slip.header) + '\n' + NORMAL + BOLD_OFF;
+data += '-'.repeat(48) + '\n';
+data += CENTER + BOLD_ON + '*** ' + clean(slip.title) + ' ***\n' + BOLD_OFF + '\n';
+data += LEFT;
+slip.lines.forEach(([label, value]) => {
+data += BOLD_ON + clean(label) + BOLD_OFF + ' ' + clean(value) + '\n';
+});
+data += '\n' + CENTER + BOLD_ON + clean(slip.footer) + '\n' + BOLD_OFF;
+data += FEED_AND_CUT;
+});
+
+window.location.href = 'intent:base64,' + btoa(data) +
+'#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;';
+}
+
+// ─── KEEP THE BACK BUTTON INSIDE THE KIOSK ──────────────────────────
+// Without this, pressing the tablet's Back button can leave the kiosk.
+history.pushState({ kiosk: true }, '');
+window.addEventListener('popstate', () => {
+history.pushState({ kiosk: true }, '');
+});
+
+// Lets the tablet install the kiosk as an app (see manifest.json)
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 </body>
