@@ -844,12 +844,13 @@ footer: kioskMode === 'firing' ? 'PLACE SLIP WITH YOUR PIECE ON THE BISQUE SHELF
 });
 }}
 
-// 2. Print. On the Android tablet, send the slips straight to RawBT (no print dialog).
-//    Anywhere else (e.g. testing on a computer), fall back to the normal print dialog.
-if (/android/i.test(navigator.userAgent)) {
-printDirectToRawBT(receiptSlips);
-} else {
+// 2. Print. Normally the slips go straight to RawBT on the tablet (no print dialog).
+//    To test on a computer, open the page with ?dialog at the end of the address
+//    (e.g. .../test-connection.js/?dialog) to get the normal print dialog instead.
+if (new URLSearchParams(location.search).has('dialog')) {
 window.print();
+} else {
+printDirectToRawBT(receiptSlips);
 }
 
 // 3. Log wirelessly to Google Apps Script Web App (creates a separate row per piece!)
