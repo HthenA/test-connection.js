@@ -496,7 +496,7 @@ if (role === 'student') mappedRole = 'class';
 if (role === 'sa' || role === 'studio assistant') mappedRole = 'assistant'; 
 if (role === 'osp' || role === 'open studio pass') mappedRole = 'member';   
 
-serverStudents.push({ name: fullName, role: mappedRole });
+serverStudents.push({ name: fullName, role: mappedRole, firstName: firstName, lastName: lastName });
 }
 }
 }
@@ -707,11 +707,13 @@ return;
 
 const clay = document.getElementById('clay-select').value;
 const calculations = calculateFiringPrice();
+const pieceDescription = document.getElementById('description').value.trim();
 
 slipHTML = `
                <div class="slip-header-date">${formattedDateHeader}</div>
                <div style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px;">*** FIRING SLIP ***</div>
                <p><strong>NAME:</strong> ${studentName}</p>
+               ${pieceDescription ? `<p><strong>DESCRIPTION:</strong> ${pieceDescription}</p>` : ''}
                <p><strong>CLAY BODY:</strong> ${clay}</p>
                <p><strong>DIMENSIONS:</strong> ${h}" x ${w}" x ${d}"</p>
                <p><strong>VOLUME:</strong> ${calculations.volume.toFixed(2)} Cu. In.</p>
@@ -793,6 +795,7 @@ const now = new Date();
 const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const formattedDateHeader = `${days[now.getDay()]} - ${now.getDate()}`;
 const receiptSlips = []; // plain-text copies for direct printing
+const showDescription = kioskMode === 'firing' && description.trim() !== '' && description !== '—';
 
 for (let q = 1; q <= qty; q++) {
 let finalDescription = qty > 1 ? `${description} (${q} of ${qty})` : description;
@@ -814,6 +817,7 @@ const pageHTML = `
                        *** ${kioskMode === 'firing' ? 'FIRING SLIP' : 'CLAY VOUCHER'} ***
                    </div>
                    <p><strong>NAME:</strong> ${studentName}</p>
+                   ${showDescription ? `<p><strong>DESCRIPTION:</strong> ${description}</p>` : ''}
                    <p><strong>${kioskMode === 'firing' ? 'CLAY BODY:' : 'PRODUCT:'}</strong> ${detailName}</p>
                    ${kioskMode === 'firing' ? `<p><strong>DIMENSIONS:</strong> ${height.value}" x ${width.value}" x ${depth.value}"</p>` : ''}
                    ${kioskMode === 'firing' ? `<p><strong>VOLUME:</strong> ${volume.toFixed(2)} Cu. In.</p>` : ''}
@@ -833,6 +837,7 @@ header: formattedDateHeader,
 title: kioskMode === 'firing' ? 'FIRING SLIP' : 'CLAY VOUCHER',
 lines: [
 ['NAME:', studentName],
+...(showDescription ? [['DESCRIPTION:', description]] : []),
 [kioskMode === 'firing' ? 'CLAY BODY:' : 'PRODUCT:', detailName],
 ...(kioskMode === 'firing' ? [
 ['DIMENSIONS:', `${height.value}" x ${width.value}" x ${depth.value}"`],
@@ -869,8 +874,12 @@ resetForm();
 }
 
 async function sendToDatabaseBackend(student, role, subtotal, discount, amount, donation, volume, detailName, descriptionText) {
+// Look up the student's separate first and last names from the roster
+const rosterEntry = serverStudents.find(s => s.name === student) || {};
 const payload = {
 studentName: student,
+firstName: rosterEntry.firstName || '',
+lastName: rosterEntry.lastName || '',
 role: role,
 subtotal: subtotal,
 discount: discount, 
